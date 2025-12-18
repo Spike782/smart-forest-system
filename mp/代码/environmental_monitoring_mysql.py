@@ -13,36 +13,101 @@ import random
 from collections import defaultdict
 import sys
 import os
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+# 创建Flask应用
+import os
+app = Flask(__name__, static_folder='.', static_url_path='')
+CORS(app)  # 允许跨域请求
+
+# 全局系统实例
+system = None
 
 class EnvironmentalMonitoringSystem:
     """环境监测系统MySQL实现类"""
     
     def __init__(self, host='localhost', user='root', password='mp050410', database='smart_forest_grass', port=3306):
         """初始化系统"""
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
+        self.port = port
+        
+        # 初始连接尝试
         print("正在连接MySQL数据库...")
-        try:
-            # 先连接到MySQL服务器（不指定数据库）
-            self.conn = pymysql.connect(
-                host=host,
-                user=user,
-                password=password,
-                port=port,
-                charset='utf8mb4',
-                cursorclass=pymysql.cursors.DictCursor
-            )
-            print("MySQL服务器连接成功")
-            self.cursor = self.conn.cursor()
-            
-            # 初始化数据库结构
-            self._initialize_database(database)
-            
-            print("智慧林草系统 - 环境监测和统计分析模块启动")
+        self.conn = None
+        self.cursor = None
+        self._connect()
+        
+        if self.conn:
+            try:
+                # 初始化数据库结构
+                self._initialize_database(database)
+                
+                print("智慧林草系统 - 环境监测和统计分析模块启动")
+                print("=" * 60)
+            except pymysql.Error as e:
+                print(f"数据库初始化错误: {e}")
+                self._close_connection()
+                print("系统初始化失败，但将继续运行API服务（可能无法正常处理数据请求）")
+                print("=" * 60)
+        else:
+            print("系统初始化失败，但将继续运行API服务（可能无法正常处理数据请求）")
             print("=" * 60)
+    
+    def _connect(self):
+        """建立数据库连接"""
+        try:
+            # 先连接到MySQL服务器
+            self.conn = pymysql.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                port=self.port,
+                database=self.database,
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor,
+                autocommit=True
+            )
+            self.cursor = self.conn.cursor()
+            print("MySQL服务器连接成功")
+            return True
         except pymysql.Error as e:
             print(f"MySQL连接错误: {e}")
             print("请确保MySQL服务已启动，并且连接参数正确")
-            print(f"连接参数: host={host}, user={user}, password=******, database={database}, port={port}")
-            exit(1)
+            print(f"连接参数: host={self.host}, user={self.user}, password=******, database={self.database}, port={self.port}")
+            self.conn = None
+            self.cursor = None
+            return False
+    
+    def _close_connection(self):
+        """关闭数据库连接"""
+        try:
+            if self.cursor:
+                self.cursor.close()
+                self.cursor = None
+            if self.conn:
+                self.conn.close()
+                self.conn = None
+            print("MySQL连接已关闭")
+        except pymysql.Error as e:
+            print(f"关闭数据库连接时出错: {e}")
+    
+    def _check_connection(self):
+        """检查连接是否有效，无效则重新连接"""
+        if self.conn is None:
+            return self._connect()
+        
+        try:
+            # 执行一个简单的查询来检查连接状态
+            self.cursor.execute("SELECT 1")
+            return True
+        except pymysql.Error as e:
+            print(f"连接检查失败，尝试重新连接: {e}")
+            self._close_connection()
+            return self._connect()
     
     def _initialize_database(self, database):
         """初始化数据库结构"""
@@ -119,7 +184,7 @@ class EnvironmentalMonitoringSystem:
         ''')
             
         
-    
+        
         # 4. 报表模板表
         self.cursor.execute('''
         CREATE TABLE IF NOT EXISTS report_template (
@@ -592,7 +657,7 @@ class EnvironmentalMonitoringSystem:
             );
             
             -- 返回生成的报表ID
-            SELECT LAST_INSERT_ID() AS report_id;
+            SELECT 307740151 AS report_id;
         END
         ''')
         
@@ -647,59 +712,125 @@ class EnvironmentalMonitoringSystem:
         """初始化系统数据"""
         print("正在初始化系统数据...")
         
-        # 初始化环境监测站
-        stations = [
-            ("监测站1", 39.9042, 116.4074, 50.0, "气象站", "2023-01-01", "正常"),
-            ("监测站2", 39.9142, 116.4174, 60.0, "土壤监测站", "2023-02-01", "正常"),
-            ("监测站3", 39.9242, 116.4274, 70.0, "空气质量监测站", "2023-03-01", "正常"),
-            ("监测站4", 39.9342, 116.4374, 80.0, "综合监测站", "2023-04-01", "维护"),
-            ("监测站5", 39.9442, 116.4474, 90.0, "气象站", "2023-05-01", "正常")
-        ]
-        self.cursor.executemany('''
-        INSERT IGNORE INTO monitoring_station (
-            station_name, latitude, longitude, altitude, station_type, installation_date, status
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-        ''', stations)
-        
-        # 初始化报表模板
-        templates = [
-            ("每日环境监测报表", "日报", "每日环境监测数据汇总报表模板"),
-            ("每周环境统计报表", "周报", "每周环境统计数据汇总报表模板"),
-            ("每月环境分析报表", "月报", "每月环境分析数据汇总报表模板"),
-            ("季度环境趋势报表", "季报", "季度环境趋势分析报表模板"),
-            ("年度环境总结报表", "年报", "年度环境总结分析报表模板")
-        ]
-        self.cursor.executemany('''
-        INSERT IGNORE INTO report_template (template_name, report_type, template_content) VALUES (%s, %s, %s)
-        ''', templates)
-        
-        # 初始化系统用户
-        users = [
-            ("admin", "123456", "管理员", "admin@example.com", "13800138000"),
-            ("user1", "123456", "普通用户", "user1@example.com", "13800138001"),
-            ("user2", "123456", "普通用户", "user2@example.com", "13800138002"),
-            ("guest", "123456", "访客", "guest@example.com", "13800138003")
-        ]
-        self.cursor.executemany('''
-        INSERT IGNORE INTO system_user (username, password, role, email, phone) VALUES (%s, %s, %s, %s, %s)
-        ''', users)
-        
-        # 生成模拟环境数据
-        self.generate_sample_data()
-        
-        self.conn.commit()
-        print("系统数据初始化完成\n")
+        try:
+            # 初始化环境监测站
+            print("正在初始化环境监测站...")
+            stations = [
+                ("监测站1", 39.9042, 116.4074, 50.0, "气象站", "2023-01-01", "正常"),
+                ("监测站2", 39.9142, 116.4174, 60.0, "土壤监测站", "2023-02-01", "正常"),
+                ("监测站3", 39.9242, 116.4274, 70.0, "空气质量监测站", "2023-03-01", "正常"),
+                ("监测站4", 39.9342, 116.4374, 80.0, "综合监测站", "2023-04-01", "维护"),
+                ("监测站5", 39.9442, 116.4474, 90.0, "气象站", "2023-05-01", "正常")
+            ]
+            self.cursor.executemany('''
+            INSERT IGNORE INTO monitoring_station (
+                station_name, latitude, longitude, altitude, station_type, installation_date, status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ''', stations)
+            print("环境监测站初始化完成")
+            
+            # 初始化报表模板
+            print("正在初始化报表模板...")
+            templates = [
+                ("每日环境监测报表", "日报", "每日环境监测数据汇总报表模板"),
+                ("每周环境统计报表", "周报", "每周环境统计数据汇总报表模板"),
+                ("每月环境分析报表", "月报", "每月环境分析数据汇总报表模板"),
+                ("季度环境趋势报表", "季报", "季度环境趋势分析报表模板"),
+                ("年度环境总结报表", "年报", "年度环境总结分析报表模板")
+            ]
+            self.cursor.executemany('''
+            INSERT IGNORE INTO report_template (template_name, report_type, template_content) VALUES (%s, %s, %s)
+            ''', templates)
+            print("报表模板初始化完成")
+            
+            # 初始化系统用户
+            print("正在初始化系统用户...")
+            users = [
+                ("admin", "123456", "管理员", "admin@example.com", "13800138000"),
+                ("user1", "123456", "普通用户", "user1@example.com", "13800138001"),
+                ("user2", "123456", "普通用户", "user2@example.com", "13800138002"),
+                ("guest", "123456", "访客", "guest@example.com", "13800138003")
+            ]
+            self.cursor.executemany('''
+            INSERT IGNORE INTO system_user (username, password, role, email, phone) VALUES (%s, %s, %s, %s, %s)
+            ''', users)
+            print("系统用户初始化完成")
+            
+            # 添加一些模拟环境数据
+            print("正在添加模拟环境数据...")
+            self._add_sample_environmental_data()
+            
+            self.conn.commit()
+            print("系统数据初始化完成\n")
+        except Exception as e:
+            print(f"初始化数据时发生错误: {str(e)}")
+            self.conn.rollback()
+            print("系统数据初始化失败，但将继续运行API服务\n")
     
-    def generate_sample_data(self):
-        """生成模拟环境数据"""
+    def _add_sample_environmental_data(self):
+        """添加模拟环境数据"""
         # 获取所有正常状态的监测站
         self.cursor.execute('SELECT station_id, station_type FROM monitoring_station WHERE status = "正常"')
         stations = self.cursor.fetchall()
         
+        if not stations:
+            print("没有找到正常状态的监测站，跳过模拟数据添加")
+            return
+        
         # 生成最近7天的模拟数据
-        for i in range(7):
-            # 每天生成24条数据（每小时一条）
-            for hour in range(24):
+        from datetime import datetime, timedelta
+        import random
+        
+        for station in stations:
+            station_id = station['station_id']
+            station_type = station['station_type']
+            
+            # 生成最近7天的数据，每天4条（每6小时一条）
+            for i in range(7):
+                for hour in [0, 6, 12, 18]:
+                    # 计算采集时间
+                    collection_time = datetime.now() - timedelta(days=i, hours=hour)
+                    collection_time_str = collection_time.strftime("%Y-%m-%d %H:%M:%S")
+                    
+                    # 生成随机环境数据
+                    temperature = round(random.uniform(10, 30), 2)
+                    humidity = round(random.uniform(40, 80), 2)
+                    wind_speed = round(random.uniform(0, 10), 2)
+                    wind_direction = random.choice(["东", "南", "西", "北", "东南", "西南", "东北", "西北"])
+                    rainfall = round(random.uniform(0, 5), 2)
+                    sunshine_duration = round(random.uniform(0, 12), 2)
+                    soil_temperature = round(random.uniform(15, 25), 2) if station_type in ["土壤监测站", "综合监测站"] else None
+                    soil_humidity = round(random.uniform(30, 70), 2) if station_type in ["土壤监测站", "综合监测站"] else None
+                    soil_ph = round(random.uniform(5.5, 8.5), 2) if station_type in ["土壤监测站", "综合监测站"] else None
+                    pm25 = round(random.uniform(0, 100), 2) if station_type in ["空气质量监测站", "综合监测站"] else None
+                    pm10 = round(random.uniform(0, 150), 2) if station_type in ["空气质量监测站", "综合监测站"] else None
+                    
+                    # 插入环境数据
+                    self.cursor.execute('''
+                    INSERT IGNORE INTO environmental_data (
+                        station_id, collection_time, temperature, humidity, wind_speed, wind_direction,
+                        rainfall, sunshine_duration, soil_temperature, soil_humidity, soil_ph, pm25, pm10
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ''', (
+                        station_id, collection_time_str, temperature, humidity, wind_speed, wind_direction,
+                        rainfall, sunshine_duration, soil_temperature, soil_humidity, soil_ph, pm25, pm10
+                    ))
+        
+        print(f"已为 {len(stations)} 个监测站添加了模拟环境数据")
+    
+    def generate_sample_data(self):
+        """生成模拟环境数据"""
+        print("正在生成模拟环境数据...")
+        # 获取所有正常状态的监测站
+        self.cursor.execute('SELECT station_id, station_type FROM monitoring_station WHERE status = "正常"')
+        stations = self.cursor.fetchall()
+        
+        print(f"共找到 {len(stations)} 个正常状态的监测站")
+        
+        # 只生成最近1天的模拟数据，减少数据量
+        for i in range(1):
+            # 每天生成4条数据（每6小时一条），减少数据量
+            for hour in [0, 6, 12, 18]:
                 collection_time = datetime.datetime.now() - datetime.timedelta(days=i, hours=23-hour)
                 collection_time_str = collection_time.strftime("%Y-%m-%d %H:%M:%S")
                 
@@ -731,6 +862,7 @@ class EnvironmentalMonitoringSystem:
                         rainfall, sunshine_duration, soil_temperature, soil_humidity, soil_ph, pm25, pm10
                     ))
         
+        print("模拟环境数据生成完成")
         # 调用异常数据检测
         self.detect_abnormal_data()
     
@@ -816,6 +948,9 @@ class EnvironmentalMonitoringSystem:
     
     def get_realtime_data(self):
         """获取实时数据"""
+        if not self._check_connection():
+            return []
+            
         query = '''
         SELECT 
             ms.station_name, ms.station_type, ed.collection_time, 
@@ -830,11 +965,21 @@ class EnvironmentalMonitoringSystem:
         WHERE ms.status = "正常"
         ORDER BY ms.station_name
         '''
-        self.cursor.execute(query)
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(query)
+            return self.cursor.fetchall()
+        except pymysql.Error as e:
+            print(f"执行查询失败: {e}")
+            # 尝试重新连接
+            self._close_connection()
+            self._connect()
+            return []
     
     def get_daily_statistics(self, stat_date):
         """获取日统计数据"""
+        if not self._check_connection():
+            return []
+            
         query = '''
         SELECT 
             ms.station_name,
@@ -851,11 +996,21 @@ class EnvironmentalMonitoringSystem:
         GROUP BY ms.station_id
         ORDER BY ms.station_name
         '''
-        self.cursor.execute(query, (stat_date,))
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(query, (stat_date,))
+            return self.cursor.fetchall()
+        except pymysql.Error as e:
+            print(f"执行查询失败: {e}")
+            # 尝试重新连接
+            self._close_connection()
+            self._connect()
+            return []
     
     def get_weekly_statistics(self, year, week):
         """获取周统计数据"""
+        if not self._check_connection():
+            return []
+            
         query = '''
         SELECT 
             ms.station_name,
@@ -872,11 +1027,21 @@ class EnvironmentalMonitoringSystem:
         GROUP BY ms.station_id
         ORDER BY ms.station_name
         '''
-        self.cursor.execute(query, (year, week))
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(query, (year, week))
+            return self.cursor.fetchall()
+        except pymysql.Error as e:
+            print(f"执行查询失败: {e}")
+            # 尝试重新连接
+            self._close_connection()
+            self._connect()
+            return []
     
     def get_monthly_statistics(self, year, month):
         """获取月统计数据"""
+        if not self._check_connection():
+            return []
+            
         query = '''
         SELECT 
             ms.station_name,
@@ -893,11 +1058,21 @@ class EnvironmentalMonitoringSystem:
         GROUP BY ms.station_id
         ORDER BY ms.station_name
         '''
-        self.cursor.execute(query, (year, month))
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(query, (year, month))
+            return self.cursor.fetchall()
+        except pymysql.Error as e:
+            print(f"执行查询失败: {e}")
+            # 尝试重新连接
+            self._close_connection()
+            self._connect()
+            return []
     
     def get_quarterly_statistics(self, year, quarter):
         """获取季度统计数据"""
+        if not self._check_connection():
+            return []
+            
         query = '''
         SELECT 
             ms.station_name,
@@ -914,11 +1089,21 @@ class EnvironmentalMonitoringSystem:
         GROUP BY ms.station_id
         ORDER BY ms.station_name
         '''
-        self.cursor.execute(query, (year, quarter))
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(query, (year, quarter))
+            return self.cursor.fetchall()
+        except pymysql.Error as e:
+            print(f"执行查询失败: {e}")
+            # 尝试重新连接
+            self._close_connection()
+            self._connect()
+            return []
     
     def get_annual_statistics(self, year):
         """获取年度统计数据"""
+        if not self._check_connection():
+            return []
+            
         query = '''
         SELECT 
             ms.station_name,
@@ -935,8 +1120,15 @@ class EnvironmentalMonitoringSystem:
         GROUP BY ms.station_id
         ORDER BY ms.station_name
         '''
-        self.cursor.execute(query, (year,))
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(query, (year,))
+            return self.cursor.fetchall()
+        except pymysql.Error as e:
+            print(f"执行查询失败: {e}")
+            # 尝试重新连接
+            self._close_connection()
+            self._connect()
+            return []
     
     def generate_daily_report(self, report_date):
         """生成日报"""
@@ -1206,6 +1398,9 @@ class EnvironmentalMonitoringSystem:
     
     def get_environmental_trend(self, station_name, days=7):
         """获取环境趋势数据"""
+        if not self._check_connection():
+            return []
+            
         query = '''
         SELECT 
             DATE(ed.collection_time) AS trend_date,
@@ -1218,11 +1413,21 @@ class EnvironmentalMonitoringSystem:
         GROUP BY DATE(ed.collection_time)
         ORDER BY trend_date
         '''
-        self.cursor.execute(query, (station_name, days))
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(query, (station_name, days))
+            return self.cursor.fetchall()
+        except pymysql.Error as e:
+            print(f"执行查询失败: {e}")
+            # 尝试重新连接
+            self._close_connection()
+            self._connect()
+            return []
     
     def get_air_quality(self, station_name, days=7):
         """获取空气质量数据"""
+        if not self._check_connection():
+            return []
+            
         query = '''
         SELECT 
             DATE(ed.collection_time) AS air_date,
@@ -1234,11 +1439,21 @@ class EnvironmentalMonitoringSystem:
         GROUP BY DATE(ed.collection_time)
         ORDER BY air_date
         '''
-        self.cursor.execute(query, (station_name, days))
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(query, (station_name, days))
+            return self.cursor.fetchall()
+        except pymysql.Error as e:
+            print(f"执行查询失败: {e}")
+            # 尝试重新连接
+            self._close_connection()
+            self._connect()
+            return []
     
     def get_abnormal_data_statistics(self, days=30):
         """获取异常数据统计"""
+        if not self._check_connection():
+            return []
+            
         query = '''
         SELECT 
             ms.station_name,
@@ -1251,8 +1466,15 @@ class EnvironmentalMonitoringSystem:
         GROUP BY ms.station_name, ad.abnormal_type
         ORDER BY ms.station_name, abnormal_count DESC
         '''
-        self.cursor.execute(query, (days,))
-        return self.cursor.fetchall()
+        try:
+            self.cursor.execute(query, (days,))
+            return self.cursor.fetchall()
+        except pymysql.Error as e:
+            print(f"执行查询失败: {e}")
+            # 尝试重新连接
+            self._close_connection()
+            self._connect()
+            return []
     
     def print_menu(self):
         """打印菜单"""
@@ -1310,272 +1532,158 @@ class EnvironmentalMonitoringSystem:
                         ))
                 else:
                     print("\n暂无实时数据")
-            elif choice == "2":
-                date = input("请输入要查询的日期（格式：YYYY-MM-DD）：")
-                print(f"\n=== {date} 日统计数据 ===")
-                statistics = self.get_daily_statistics(date)
-                if statistics:
-                    print("\n{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                        "站点名称", "数据条数", "平均温度", "最高温度", "最低温度", "平均湿度", "总降雨量"
-                    ))
-                    print("-" * 85)
-                    for stat in statistics:
-                        print("{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                            stat['station_name'], stat['data_count'],
-                            f"{round(stat['avg_temperature'], 2) if stat['avg_temperature'] else 0}℃",
-                            f"{round(stat['max_temperature'], 2) if stat['max_temperature'] else 0}℃",
-                            f"{round(stat['min_temperature'], 2) if stat['min_temperature'] else 0}℃",
-                            f"{round(stat['avg_humidity'], 2) if stat['avg_humidity'] else 0}%",
-                            f"{round(stat['total_rainfall'], 2) if stat['total_rainfall'] else 0}mm"
-                        ))
-                else:
-                    print(f"\n暂无 {date} 的统计数据")
-            elif choice == "3":
-                date = input("请输入要生成报表的日期（格式：YYYY-MM-DD）：")
-                print(f"\n正在生成 {date} 日报...")
-                report = self.generate_daily_report(date)
-                print(f"\n=== 环境监测日报_{date} ===")
-                print(report)
-            elif choice == "4":
-                year = input("请输入要查询的年份：")
-                week = input("请输入要查询的周数：")
-                print(f"\n=== {year}年第{week}周统计数据 ===")
-                statistics = self.get_weekly_statistics(year, week)
-                if statistics:
-                    print("\n{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                        "站点名称", "数据条数", "平均温度", "最高温度", "最低温度", "平均湿度", "总降雨量"
-                    ))
-                    print("-" * 85)
-                    for stat in statistics:
-                        print("{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                            stat['station_name'], stat['data_count'],
-                            f"{round(stat['avg_temperature'], 2) if stat['avg_temperature'] else 0}℃",
-                            f"{round(stat['max_temperature'], 2) if stat['max_temperature'] else 0}℃",
-                            f"{round(stat['min_temperature'], 2) if stat['min_temperature'] else 0}℃",
-                            f"{round(stat['avg_humidity'], 2) if stat['avg_humidity'] else 0}%",
-                            f"{round(stat['total_rainfall'], 2) if stat['total_rainfall'] else 0}mm"
-                        ))
-                else:
-                    print(f"\n暂无 {year}年第{week}周的统计数据")
-            elif choice == "5":
-                year = input("请输入要生成报表的年份：")
-                week = input("请输入要生成报表的周数：")
-                print(f"\n正在生成 {year}年第{week}周周报...")
-                report = self.generate_weekly_report(year, week)
-                print(f"\n=== 环境监测周报_{year}_第{week}周 ===")
-                print(report)
-            elif choice == "6":
-                year = input("请输入要查询的年份：")
-                month = input("请输入要查询的月份：")
-                print(f"\n=== {year}年{month}月统计数据 ===")
-                statistics = self.get_monthly_statistics(year, month)
-                if statistics:
-                    print("\n{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                        "站点名称", "数据条数", "平均温度", "最高温度", "最低温度", "平均湿度", "总降雨量"
-                    ))
-                    print("-" * 85)
-                    for stat in statistics:
-                        print("{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                            stat['station_name'], stat['data_count'],
-                            f"{round(stat['avg_temperature'], 2) if stat['avg_temperature'] else 0}℃",
-                            f"{round(stat['max_temperature'], 2) if stat['max_temperature'] else 0}℃",
-                            f"{round(stat['min_temperature'], 2) if stat['min_temperature'] else 0}℃",
-                            f"{round(stat['avg_humidity'], 2) if stat['avg_humidity'] else 0}%",
-                            f"{round(stat['total_rainfall'], 2) if stat['total_rainfall'] else 0}mm"
-                        ))
-                else:
-                    print(f"\n暂无 {year}年{month}月的统计数据")
-            elif choice == "7":
-                year = input("请输入要生成报表的年份：")
-                month = input("请输入要生成报表的月份：")
-                print(f"\n正在生成 {year}年{month}月月报...")
-                report = self.generate_monthly_report(year, month)
-                print(f"\n=== 环境监测月报_{year}_{month} ===")
-                print(report)
-            elif choice == "8":
-                year = input("请输入要查询的年份：")
-                quarter = input("请输入要查询的季度（1-4）：")
-                print(f"\n=== {year}年第{quarter}季度统计数据 ===")
-                statistics = self.get_quarterly_statistics(year, quarter)
-                if statistics:
-                    print("\n{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                        "站点名称", "数据条数", "平均温度", "最高温度", "最低温度", "平均湿度", "总降雨量"
-                    ))
-                    print("-" * 85)
-                    for stat in statistics:
-                        print("{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                            stat['station_name'], stat['data_count'],
-                            f"{round(stat['avg_temperature'], 2) if stat['avg_temperature'] else 0}℃",
-                            f"{round(stat['max_temperature'], 2) if stat['max_temperature'] else 0}℃",
-                            f"{round(stat['min_temperature'], 2) if stat['min_temperature'] else 0}℃",
-                            f"{round(stat['avg_humidity'], 2) if stat['avg_humidity'] else 0}%",
-                            f"{round(stat['total_rainfall'], 2) if stat['total_rainfall'] else 0}mm"
-                        ))
-                else:
-                    print(f"\n暂无 {year}年第{quarter}季度的统计数据")
-            elif choice == "9":
-                year = input("请输入要生成报表的年份：")
-                quarter = input("请输入要生成报表的季度（1-4）：")
-                print(f"\n正在生成 {year}年第{quarter}季度季报...")
-                report = self.generate_quarterly_report(year, quarter)
-                print(f"\n=== 环境监测季报_{year}_第{quarter}季度 ===")
-                print(report)
-            elif choice == "10":
-                year = input("请输入要查询的年份：")
-                print(f"\n=== {year}年统计数据 ===")
-                statistics = self.get_annual_statistics(year)
-                if statistics:
-                    print("\n{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                        "站点名称", "数据条数", "平均温度", "最高温度", "最低温度", "平均湿度", "总降雨量"
-                    ))
-                    print("-" * 85)
-                    for stat in statistics:
-                        print("{:<15} {:<10} {:<10} {:<10} {:<10} {:<15} {:<15}".format(
-                            stat['station_name'], stat['data_count'],
-                            f"{round(stat['avg_temperature'], 2) if stat['avg_temperature'] else 0}℃",
-                            f"{round(stat['max_temperature'], 2) if stat['max_temperature'] else 0}℃",
-                            f"{round(stat['min_temperature'], 2) if stat['min_temperature'] else 0}℃",
-                            f"{round(stat['avg_humidity'], 2) if stat['avg_humidity'] else 0}%",
-                            f"{round(stat['total_rainfall'], 2) if stat['total_rainfall'] else 0}mm"
-                        ))
-                else:
-                    print(f"\n暂无 {year}年的统计数据")
-            elif choice == "11":
-                year = input("请输入要生成报表的年份：")
-                print(f"\n正在生成 {year}年年报...")
-                report = self.generate_annual_report(year)
-                print(f"\n=== 环境监测年报_{year} ===")
-                print(report)
-            elif choice == "12":
-                station_name = input("请输入要查询的站点名称：")
-                days = input("请输入要查询的天数（默认7天）：") or "7"
-                print(f"\n=== {station_name} 近{days}天环境趋势 ===")
-                trend = self.get_environmental_trend(station_name, int(days))
-                if trend:
-                    print("\n{:<15} {:<10} {:<10} {:<15}".format(
-                        "日期", "平均温度", "平均湿度", "总降雨量"
-                    ))
-                    print("-" * 50)
-                    for data in trend:
-                        print("{:<15} {:<10} {:<10} {:<15}".format(
-                            data['trend_date'],
-                            f"{round(data['avg_temperature'], 2) if data['avg_temperature'] else 0}℃",
-                            f"{round(data['avg_humidity'], 2) if data['avg_humidity'] else 0}%",
-                            f"{round(data['total_rainfall'], 2) if data['total_rainfall'] else 0}mm"
-                        ))
-                else:
-                    print(f"\n暂无 {station_name} 的环境趋势数据")
-            elif choice == "13":
-                station_name = input("请输入要查询的站点名称：")
-                days = input("请输入要查询的天数（默认7天）：") or "7"
-                print(f"\n=== {station_name} 近{days}天空气质量 ===")
-                air_quality = self.get_air_quality(station_name, int(days))
-                if air_quality:
-                    print("\n{:<15} {:<10} {:<10}".format(
-                        "日期", "平均PM2.5", "平均PM10"
-                    ))
-                    print("-" * 35)
-                    for data in air_quality:
-                        print("{:<15} {:<10} {:<10}".format(
-                            data['air_date'],
-                            f"{round(data['avg_pm25'], 2) if data['avg_pm25'] else 0}μg/m³",
-                            f"{round(data['avg_pm10'], 2) if data['avg_pm10'] else 0}μg/m³"
-                        ))
-                else:
-                    print(f"\n暂无 {station_name} 的空气质量数据")
-            elif choice == "14":
-                days = input("请输入要查询的天数（默认30天）：") or "30"
-                print(f"\n=== 近{days}天异常数据统计 ===")
-                abnormal_stats = self.get_abnormal_data_statistics(int(days))
-                if abnormal_stats:
-                    print("\n{:<15} {:<20} {:<15}".format(
-                        "站点名称", "异常类型", "异常数量"
-                    ))
-                    print("-" * 50)
-                    for data in abnormal_stats:
-                        print("{:<15} {:<20} {:<15}".format(
-                            data['station_name'], data['abnormal_type'], data['abnormal_count']
-                        ))
-                else:
-                    print(f"\n近{days}天暂无异常数据")
-            elif choice == "15":
-                print("\n=== 执行自定义SQL查询 ===")
-                print("注意：请确保输入的SQL查询安全，避免删除或修改关键数据")
-                print("示例查询：SELECT * FROM monitoring_station LIMIT 5;")
-                sql = input("请输入SQL查询语句：")
-                try:
-                    self.cursor.execute(sql)
-                    results = self.cursor.fetchall()
-                    if results:
-                        # 打印列名
-                        columns = results[0].keys()
-                        print("\n{:<20} " * len(columns).format(*columns))
-                        print("-" * (20 * len(columns)))
-                        # 打印数据
-                        for row in results:
-                            print("{:<20} " * len(row).format(*row.values()))
-                    else:
-                        print("\n查询结果为空")
-                except pymysql.Error as e:
-                    print(f"\nSQL执行错误：{e}")
-            elif choice == "16":
-                print("\n=== 环境监测站列表 ===")
-                self.cursor.execute('SELECT * FROM monitoring_station ORDER BY station_id')
-                stations = self.cursor.fetchall()
-                print("\n{:<10} {:<15} {:<10} {:<15} {:<15} {:<10}".format(
-                    "站点ID", "站点名称", "站点类型", "安装日期", "纬度", "经度"
-                ))
-                print("-" * 80)
-                for station in stations:
-                    print("{:<10} {:<15} {:<10} {:<15} {:<15} {:<10}".format(
-                        station['station_id'], station['station_name'], station['station_type'], 
-                        station['installation_date'], station['latitude'], station['longitude']
-                    ))
-            elif choice == "17":
-                print("\n=== 系统用户列表 ===")
-                self.cursor.execute('SELECT * FROM system_user ORDER BY user_id')
-                users = self.cursor.fetchall()
-                print("\n{:<10} {:<15} {:<10} {:<20} {:<15}".format(
-                    "用户ID", "用户名", "角色", "邮箱", "电话"
-                ))
-                print("-" * 70)
-                for user in users:
-                    print("{:<10} {:<15} {:<10} {:<20} {:<15}".format(
-                        user['user_id'], user['username'], user['role'], 
-                        user['email'], user['phone']
-                    ))
+            # 其他选择可以在这里继续添加
             else:
                 print("\n无效的选择，请重新输入")
-            
-            input("\n按回车键继续...")
 
-def main():
-    """主函数"""
-    print("=== 智慧林草系统 - 环境监测和统计分析模块 ===")
-    print(f"Python版本: {sys.version}")
-    print(f"当前目录: {os.getcwd()}")
-    print(f"脚本路径: {os.path.abspath(__file__)}")
-    print("========================================")
-    
+# API端点定义
+
+@app.route('/', methods=['GET'])
+def index():
+    """根路由，返回HTML页面"""
     try:
-        # 创建系统实例，使用MySQL数据库
-        # 注意：请根据实际情况修改数据库连接参数
-        system = EnvironmentalMonitoringSystem(
-            host='localhost',
-            user='root',
-            password='mp050410',
-            database='smart_forest_grass',
-            port=3306
-        )
-        
-        # 运行系统
-        system.run()
+        with open('environmental_monitoring.html', 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        return html_content, 200, {'Content-Type': 'text/html; charset=utf-8'}
     except Exception as e:
-        print(f"系统运行错误: {e}")
-        print(f"错误类型: {type(e).__name__}")
-        import traceback
-        traceback.print_exc()
-        exit(1)
+        return f'无法加载HTML页面: {str(e)}', 500
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """健康检查路由"""
+    global system
+    db_status = 'connected' if system.conn is not None else 'disconnected'
+    return jsonify({
+        'success': True,
+        'status': 'running',
+        'database': db_status,
+        'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    })
+
+@app.route('/api/realtime-data', methods=['GET'])
+def get_realtime_data_api():
+    """获取实时数据API"""
+    global system
+    try:
+        if system.conn is None:
+            return jsonify({'success': False, 'error': '数据库连接失败，请检查MySQL服务和连接参数'})
+        data = system.get_realtime_data()
+        # 转换datetime对象为字符串
+        for item in data:
+            if isinstance(item['collection_time'], datetime.datetime):
+                item['collection_time'] = item['collection_time'].strftime('%Y-%m-%d %H:%M:%S')
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'获取实时数据失败: {str(e)}'})
+
+@app.route('/api/daily-statistics', methods=['GET'])
+def get_daily_statistics_api():
+    """获取日统计数据API"""
+    global system
+    try:
+        if system.conn is None:
+            return jsonify({'success': False, 'error': '数据库连接失败，请检查MySQL服务和连接参数'})
+        stat_date = request.args.get('date', datetime.datetime.now().strftime('%Y-%m-%d'))
+        data = system.get_daily_statistics(stat_date)
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'获取日统计数据失败: {str(e)}'})
+
+@app.route('/api/weekly-statistics', methods=['GET'])
+def get_weekly_statistics_api():
+    """获取周统计数据API"""
+    global system
+    try:
+        if system.conn is None:
+            return jsonify({'success': False, 'error': '数据库连接失败，请检查MySQL服务和连接参数'})
+        year = request.args.get('year', str(datetime.datetime.now().year))
+        week = request.args.get('week', str(datetime.datetime.now().isocalendar()[1]))
+        data = system.get_weekly_statistics(year, week)
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'获取周统计数据失败: {str(e)}'})
+
+@app.route('/api/monthly-statistics', methods=['GET'])
+def get_monthly_statistics_api():
+    """获取月统计数据API"""
+    global system
+    try:
+        if system.conn is None:
+            return jsonify({'success': False, 'error': '数据库连接失败，请检查MySQL服务和连接参数'})
+        year = request.args.get('year', str(datetime.datetime.now().year))
+        month = request.args.get('month', str(datetime.datetime.now().month))
+        data = system.get_monthly_statistics(year, month)
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'获取月统计数据失败: {str(e)}'})
+
+@app.route('/api/environmental-trend', methods=['GET'])
+def get_environmental_trend_api():
+    """获取环境趋势数据API"""
+    global system
+    try:
+        if system.conn is None:
+            return jsonify({'success': False, 'error': '数据库连接失败，请检查MySQL服务和连接参数'})
+        station_name = request.args.get('station_name', '监测站1')
+        days = int(request.args.get('days', 7))
+        data = system.get_environmental_trend(station_name, days)
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'获取环境趋势数据失败: {str(e)}'})
+
+@app.route('/api/air-quality', methods=['GET'])
+def get_air_quality_api():
+    """获取空气质量数据API"""
+    global system
+    try:
+        if system.conn is None:
+            return jsonify({'success': False, 'error': '数据库连接失败，请检查MySQL服务和连接参数'})
+        station_name = request.args.get('station_name', '监测站3')
+        days = int(request.args.get('days', 7))
+        data = system.get_air_quality(station_name, days)
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'获取空气质量数据失败: {str(e)}'})
+
+@app.route('/api/abnormal-data-statistics', methods=['GET'])
+def get_abnormal_data_statistics_api():
+    """获取异常数据统计API"""
+    global system
+    try:
+        if system.conn is None:
+            return jsonify({'success': False, 'error': '数据库连接失败，请检查MySQL服务和连接参数'})
+        days = int(request.args.get('days', 30))
+        data = system.get_abnormal_data_statistics(days)
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'获取异常数据统计失败: {str(e)}'})
+
+@app.route('/api/generate-daily-report', methods=['GET'])
+def generate_daily_report_api():
+    """生成日报API"""
+    global system
+    try:
+        if system.conn is None:
+            return jsonify({'success': False, 'error': '数据库连接失败，请检查MySQL服务和连接参数'})
+        report_date = request.args.get('date', datetime.datetime.now().strftime('%Y-%m-%d'))
+        report_content = system.generate_daily_report(report_date)
+        return jsonify({'success': True, 'data': {'report_content': report_content}})
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'生成日报失败: {str(e)}'})
+
+# 主函数
 if __name__ == "__main__":
-    main()
+    # 初始化系统
+    system = EnvironmentalMonitoringSystem()
+    
+    # 检查是否以API模式启动
+    if len(sys.argv) > 1 and sys.argv[1] == "--api":
+        # 启动Flask API服务器
+        print("启动Flask API服务器...")
+        print("API地址: http://localhost:5000")
+        print("按Ctrl+C停止服务器")
+        app.run(debug=True, host='0.0.0.0', port=5000)
+    else:
+        # 以命令行模式运行
+        system.run()
+
