@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>智慧林草 - 灾害预警演示</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Arial; margin: 0; background:#f6f7fb; }
+    header { background:#111827; color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; }
+    .wrap { max-width: 1100px; margin: 18px auto; padding: 0 14px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .card { background:#fff; border-radius:12px; box-shadow: 0 8px 24px rgba(0,0,0,.06); padding:14px; }
+    .row { display:flex; gap:10px; flex-wrap: wrap; }
+    input, select, textarea { padding:8px 10px; border:1px solid #d1d5db; border-radius:10px; outline:none; width: 100%; box-sizing: border-box; }
+    button { padding:8px 12px; border:0; border-radius:10px; cursor:pointer; background:#111827; color:#fff; }
+    button.secondary{ background:#374151; }
+    button.danger { background:#b91c1c; }
+    .muted { color:#6b7280; font-size: 12px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border-bottom:1px solid #eee; padding:8px; text-align:left; font-size: 13px; vertical-align: top; }
+    th { color:#374151; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#eef2ff; color:#3730a3; }
+    .right { text-align:right; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>🌲 智慧林草系统 - 灾害预警（单页演示）</div>
+    <div v-if="token" class="muted">
+      登录用户：{{ me?.username }}（{{ me?.role }}）
+      <button class="secondary" style="margin-left:10px" @click="logout">退出</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div v-if="!token" class="card" style="max-width:520px;margin:20px auto;">
+      <h3>登录</h3>
+      <div class="row">
+        <div style="flex:1">
+          <div class="muted">用户名</div>
+          <input v-model="loginForm.username" placeholder="admin / ranger"/>
+        </div>
+        <div style="flex:1">
+          <div class="muted">密码</div>
+          <input v-model="loginForm.password" type="password" placeholder="稍后在步骤里设置"/>
+        </div>
+      </div>
+      <div style="margin-top:10px" class="row">
+        <button @click="doLogin">登录</button>
+        <div class="muted" style="padding-top:10px">
+          首次需要用后端接口给 admin / ranger 设置密码（下面步骤会教）
+        </div>
+      </div>
+      <div v-if="err" style="margin-top:8px;color:#b91c1c">{{ err }}</div>
+    </div>
+
+    <div v-else class="grid">
+      <!-- 左：监测数据 + 预警列表 -->
+      <div class="card">
+        <h3>1) 插入监测数据（DB触发器自动生成预警/通知）</h3>
+        <div class="row">
+          <div style="flex:1">
+            <div class="muted">区域</div>
+            <select v-model="reading.area_id">
+              <option v-for="a in areas" :value="a.area_id">{{ a.area_id }} - {{ a.area_name }}</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <div class="muted">温度(℃)</div>
+            <input v-model.number="reading.temperature" type="number" step="0.01" placeholder="例如 39"/>
+          </div>
+          <div style="flex:1">
+            <div class="muted">湿度(%)</div>
+            <input v-model.number="reading.humidity" type="number" step="0.01" placeholder="例如 19"/>
+          </div>
+        </div>
+        <div style="margin-top:10px" class="row">
+          <button @click="submitReading">提交监测数据</button>
+          <button class="secondary" @click="loadWarnings">刷新预警列表</button>
+          <button class="secondary" @click="loadMyNotifications">刷新我的通知</button>
+        </div>
+        <div class="muted" style="margin-top:6px">
+          触发条件示例：火灾规则存的是 JSON 字符串，例如 <span class="mono">{"temp_gte":38,"hum_lte":20}</span>
+        </div>
+
+        <hr style="border:none;border-top:1px solid #eee;margin:14px 0"/>
+
+        <h3>2) 预警列表（最多200条）</h3>
+        <div class="row">
+          <div style="flex:1">
+            <div class="muted">按处理状态过滤</div>
+            <select v-model="filter.handle_status">
+              <option value="">全部</option>
+              <option value="0">未处理</option>
+              <option value="1">处理中</option>
+              <option value="2">已结案</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <div class="muted">按区域过滤</div>
+            <select v-model="filter.area_id">
+              <option value="">全部</option>
+              <option v-for="a in areas" :value="a.area_id">{{ a.area_id }} - {{ a.area_name }}</option>
+            </select>
+          </div>
+          <div style="align-self:end">
+            <button class="secondary" @click="loadWarnings">查询</button>
+          </div>
+        </div>
+
+        <div style="overflow:auto;margin-top:10px">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>区域</th>
+                <th>类型/级别</th>
+                <th>内容</th>
+                <th>时间</th>
+                <th>状态</th>
+                <th class="right">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="w in warnings" :key="w.warning_id">
+                <td>{{ w.warning_id }}</td>
+                <td>{{ w.area_id }}<div class="muted">{{ w.area_name }}</div></td>
+                <td><span class="badge">{{ w.warning_type }}</span> L{{ w.warning_level }}</td>
+                <td>{{ w.warning_content }}</td>
+                <td class="mono">{{ w.trigger_time }}</td>
+                <td>
+                  <span v-if="w.handle_status===0" class="badge">未处理</span>
+                  <span v-else-if="w.handle_status===1" class="badge">处理中</span>
+                  <span v-else class="badge">已结案</span>
+                  <div class="muted" v-if="w.handler_id">处理人：{{ w.handler_id }}</div>
+                </td>
+                <td class="right">
+                  <button class="secondary" @click="openHandle(w)">处理</button>
+                </td>
+              </tr>
+              <tr v-if="warnings.length===0"><td colspan="7" class="muted">暂无数据</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 右：通知 + 管理规则 -->
+      <div class="card">
+        <h3>3) 我的通知</h3>
+        <div class="muted">receive_status：0未接收 / 1已接收 / 2已读</div>
+        <div style="overflow:auto;margin-top:8px; max-height:260px">
+          <table>
+            <thead>
+              <tr>
+                <th>通知ID</th>
+                <th>预警ID</th>
+                <th>内容</th>
+                <th>状态</th>
+                <th class="right">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="n in notifications" :key="n.notification_id">
+                <td>{{ n.notification_id }}</td>
+                <td>{{ n.warning_id }}</td>
+                <td style="max-width:340px">{{ n.warning_content }}</td>
+                <td>{{ n.receive_status }}</td>
+                <td class="right">
+                  <button class="secondary" @click="setNotify(n,1)">接收</button>
+                  <button class="secondary" @click="setNotify(n,2)">已读</button>
+                </td>
+              </tr>
+              <tr v-if="notifications.length===0"><td colspan="5" class="muted">暂无通知</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr style="border:none;border-top:1px solid #eee;margin:14px 0"/>
+
+        <div v-if="me?.role==='admin'">
+          <h3>4) 预警规则管理（仅 admin）</h3>
+          <div class="row">
+            <div style="flex:1">
+              <div class="muted">类型</div>
+              <input v-model="ruleForm.warning_type" placeholder="火灾/旱情/病虫害..."/>
+            </div>
+            <div style="flex:1">
+              <div class="muted">级别(1-4)</div>
+              <select v-model.number="ruleForm.warning_level">
+                <option :value="1">1 一般</option>
+                <option :value="2">2 较重</option>
+                <option :value="3">3 严重</option>
+                <option :value="4">4 特别严重</option>
+              </select>
+            </div>
+            <div style="flex:1">
+              <div class="muted">状态</div>
+              <select v-model.number="ruleForm.status">
+                <option :value="1">启用</option>
+                <option :value="0">禁用</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <div class="muted">触发条件(JSON字符串)</div>
+            <input v-model="ruleForm.trigger_condition" class="mono" placeholder='{"temp_gte":38,"hum_lte":20}'/>
+          </div>
+          <div style="margin-top:10px" class="row">
+            <button @click="saveRule">{{ ruleForm.rule_id ? '更新规则' : '新增规则' }}</button>
+            <button class="secondary" @click="clearRule">清空</button>
+            <button class="secondary" @click="loadRules">刷新规则列表</button>
+          </div>
+
+          <div style="overflow:auto;margin-top:10px; max-height:280px">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>类型</th>
+                  <th>条件</th>
+                  <th>级别</th>
+                  <th>状态</th>
+                  <th class="right">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in rules" :key="r.rule_id">
+                  <td>{{ r.rule_id }}</td>
+                  <td>{{ r.warning_type }}</td>
+                  <td class="mono" style="max-width:280px">{{ r.trigger_condition }}</td>
+                  <td>{{ r.warning_level }}</td>
+                  <td>{{ r.status }}</td>
+                  <td class="right">
+                    <button class="secondary" @click="editRule(r)">编辑</button>
+                    <button class="danger" v-if="r.status===1" @click="toggleRule(r,0)">禁用</button>
+                    <button v-else class="secondary" @click="toggleRule(r,1)">启用</button>
+                  </td>
+                </tr>
+                <tr v-if="rules.length===0"><td colspan="6" class="muted">暂无规则</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div v-else class="muted">
+          你当前不是 admin，规则管理区隐藏。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 处理预警弹窗（简单实现） -->
+  <div v-if="handleModal.show" style="position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:14px;">
+    <div class="card" style="width:720px;max-width:95vw;">
+      <h3>处理预警 #{{ handleModal.warning?.warning_id }}</h3>
+      <div class="muted">内容：{{ handleModal.warning?.warning_content }}</div>
+      <div class="row" style="margin-top:10px">
+        <div style="flex:1">
+          <div class="muted">处理状态</div>
+          <select v-model.number="handleModal.form.handle_status">
+            <option :value="0">未处理</option>
+            <option :value="1">处理中</option>
+            <option :value="2">已结案</option>
+          </select>
+        </div>
+        <div style="flex:2">
+          <div class="muted">处理结果（可选）</div>
+          <input v-model="handleModal.form.handle_result" placeholder="例如：已派人巡查，未发现明火"/>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;justify-content:flex-end">
+        <button class="secondary" @click="handleModal.show=false">取消</button>
+        <button @click="submitHandle">提交</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data(){
+    return {
+      API: "http://127.0.0.1:8000",
+      token: localStorage.getItem("token") || "",
+      me: JSON.parse(localStorage.getItem("me") || "null"),
+      err: "",
+
+      loginForm: { username: "admin", password: "" },
+
+      areas: [],
+      reading: { area_id: "A001", temperature: 39, humidity: 19 },
+
+      filter: { area_id: "", handle_status: "" },
+      warnings: [],
+
+      notifications: [],
+
+      rules: [],
+      ruleForm: { rule_id: null, warning_type: "火灾", trigger_condition: '{"temp_gte":38,"hum_lte":20}', warning_level: 3, status: 1 },
+
+      handleModal: { show:false, warning:null, form:{ handle_status:1, handle_result:"" } }
+    }
+  },
+  methods:{
+    api(){
+      const headers = this.token ? { Authorization: "Bearer " + this.token } : {};
+      return axios.create({ baseURL: this.API, headers });
+    },
+    async doLogin(){
+      this.err = "";
+      try{
+        const res = await axios.post(this.API + "/api/auth/login", this.loginForm);
+        this.token = res.data.token;
+        this.me = res.data.user;
+        localStorage.setItem("token", this.token);
+        localStorage.setItem("me", JSON.stringify(this.me));
+        await this.bootstrap();
+      }catch(e){
+        this.err = e?.response?.data?.detail || e.message;
+      }
+    },
+    logout(){
+      this.token = "";
+      this.me = null;
+      localStorage.removeItem("token");
+      localStorage.removeItem("me");
+      location.reload();
+    },
+    async bootstrap(){
+      await this.loadAreas();
+      await this.loadWarnings();
+      await this.loadMyNotifications();
+      if(this.me?.role === 'admin') await this.loadRules();
+    },
+    async loadAreas(){
+      const res = await this.api().get("/api/areas");
+      this.areas = res.data;
+      if(this.areas.length && !this.reading.area_id) this.reading.area_id = this.areas[0].area_id;
+    },
+    async submitReading(){
+      await this.api().post("/api/monitoring/reading", this.reading);
+      await this.loadWarnings();
+      await this.loadMyNotifications();
+      alert("已写入监测数据（若命中规则，DB触发器已自动生成预警/通知）");
+    },
+    async loadWarnings(){
+      const params = {};
+      if(this.filter.area_id) params.area_id = this.filter.area_id;
+      if(this.filter.handle_status !== "") params.handle_status = Number(this.filter.handle_status);
+      const res = await this.api().get("/api/warnings", { params });
+      this.warnings = res.data;
+    },
+    openHandle(w){
+      this.handleModal.warning = w;
+      this.handleModal.form = { handle_status: w.handle_status === 0 ? 1 : w.handle_status, handle_result: w.handle_result || "" };
+      this.handleModal.show = true;
+    },
+    async submitHandle(){
+      const wid = this.handleModal.warning.warning_id;
+      await this.api().put(`/api/warnings/${wid}/handle`, this.handleModal.form);
+      this.handleModal.show = false;
+      await this.loadWarnings();
+    },
+    async loadMyNotifications(){
+      const res = await this.api().get("/api/notifications/my");
+      this.notifications = res.data;
+    },
+    async setNotify(n, s){
+      await this.api().put(`/api/notifications/${n.notification_id}/status`, { receive_status: s });
+      await this.loadMyNotifications();
+    },
+
+    // admin rules
+    async loadRules(){
+      const res = await this.api().get("/api/rules");
+      this.rules = res.data;
+    },
+    editRule(r){
+      this.ruleForm = {
+        rule_id: r.rule_id,
+        warning_type: r.warning_type,
+        trigger_condition: r.trigger_condition,
+        warning_level: r.warning_level,
+        status: r.status
+      }
+    },
+    clearRule(){
+      this.ruleForm = { rule_id: null, warning_type: "火灾", trigger_condition: '{"temp_gte":38,"hum_lte":20}', warning_level: 3, status: 1 };
+    },
+    async saveRule(){
+      if(!this.ruleForm.warning_type || !this.ruleForm.trigger_condition) return alert("类型/条件不能为空");
+      if(this.ruleForm.rule_id){
+        await this.api().put(`/api/rules/${this.ruleForm.rule_id}`, this.ruleForm);
+      }else{
+        await this.api().post(`/api/rules`, this.ruleForm);
+      }
+      await this.loadRules();
+      this.clearRule();
+    },
+    async toggleRule(r, status){
+      await this.api().put(`/api/rules/${r.rule_id}/status`, { status });
+      await this.loadRules();
+    }
+  },
+  async mounted(){
+    if(this.token){
+      try{
+        // token没过期就初始化
+        await this.bootstrap();
+      }catch(e){
+        // token过期/无效
+        this.logout();
+      }
+    }
+  }
+}).mount("#app");
+</script>
+</body>
+</html>
