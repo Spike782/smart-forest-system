@@ -7,10 +7,24 @@ USE smart_forest_grass;
 
 -- 1. 创建表结构
 
--- 1.1 环境监测站表（monitoring_station）
+-- 1.1 区域信息表（region）
+CREATE TABLE IF NOT EXISTS region (
+    region_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '区域ID',
+    region_name VARCHAR(100) NOT NULL COMMENT '区域名称',
+    region_type VARCHAR(20) NOT NULL COMMENT '区域类型（森林/草地）',
+    latitude DECIMAL(10, 6) NOT NULL COMMENT '纬度',
+    longitude DECIMAL(10, 6) NOT NULL COMMENT '经度',
+    manager_id INT COMMENT '负责人ID',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_region_name (region_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='区域信息表';
+
+-- 1.2 环境监测站表（monitoring_station）
 CREATE TABLE IF NOT EXISTS monitoring_station (
     station_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '站点ID',
     station_name VARCHAR(100) NOT NULL COMMENT '站点名称',
+    region_id INT NOT NULL COMMENT '所属区域ID',
     latitude DECIMAL(10, 6) NOT NULL COMMENT '纬度',
     longitude DECIMAL(10, 6) NOT NULL COMMENT '经度',
     altitude DECIMAL(8, 2) COMMENT '海拔高度',
@@ -19,13 +33,35 @@ CREATE TABLE IF NOT EXISTS monitoring_station (
     status VARCHAR(20) DEFAULT '正常' COMMENT '状态（正常、故障、维护）',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    UNIQUE KEY uk_station_name (station_name)
+    UNIQUE KEY uk_station_name (station_name),
+    FOREIGN KEY (region_id) REFERENCES region(region_id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境监测站表';
 
--- 1.2 环境数据采集表（environmental_data）
+-- 1.3 传感器信息表（sensor）
+CREATE TABLE IF NOT EXISTS sensor (
+    sensor_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '传感器ID',
+    sensor_code VARCHAR(50) NOT NULL COMMENT '传感器编号',
+    region_id INT NOT NULL COMMENT '部署区域ID',
+    station_id INT NOT NULL COMMENT '所属站点ID',
+    area_id INT NOT NULL COMMENT '所属区域ID',
+    monitoring_type VARCHAR(50) NOT NULL COMMENT '监测类型（温度、湿度等）',
+    device_model VARCHAR(100) NOT NULL COMMENT '设备型号',
+    installation_date DATE NOT NULL COMMENT '安装时间',
+    communication_protocol VARCHAR(50) NOT NULL COMMENT '通信协议',
+    status VARCHAR(20) DEFAULT '正常' COMMENT '状态（正常、故障、维护）',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_sensor_code (sensor_code),
+    FOREIGN KEY (region_id) REFERENCES region(region_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (station_id) REFERENCES monitoring_station(station_id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='传感器信息表';
+
+-- 1.4 环境数据采集表（environmental_data）
 CREATE TABLE IF NOT EXISTS environmental_data (
     data_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '数据ID',
+    sensor_id INT NOT NULL COMMENT '传感器ID',
     station_id INT NOT NULL COMMENT '站点ID',
+    region_id INT NOT NULL COMMENT '区域ID',
     collection_time DATETIME NOT NULL COMMENT '采集时间',
     temperature DECIMAL(5, 2) COMMENT '温度（℃）',
     humidity DECIMAL(5, 2) COMMENT '湿度（%）',
@@ -38,16 +74,24 @@ CREATE TABLE IF NOT EXISTS environmental_data (
     soil_ph DECIMAL(4, 2) COMMENT '土壤pH值',
     pm25 DECIMAL(6, 2) COMMENT 'PM2.5（μg/m³）',
     pm10 DECIMAL(6, 2) COMMENT 'PM10（μg/m³）',
+    data_status VARCHAR(20) DEFAULT '有效' COMMENT '数据状态（有效/无效）',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    FOREIGN KEY (sensor_id) REFERENCES sensor(sensor_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (station_id) REFERENCES monitoring_station(station_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (region_id) REFERENCES region(region_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_sensor_time (sensor_id, collection_time),
+    INDEX idx_region_time (region_id, collection_time),
     INDEX idx_station_time (station_id, collection_time),
-    INDEX idx_collection_time (collection_time)
+    INDEX idx_collection_time (collection_time),
+    INDEX idx_data_status (data_status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='环境数据采集表';
 
--- 1.3 统计分析数据表（statistical_data）
+-- 1.5 统计分析数据表（statistical_data）
 CREATE TABLE IF NOT EXISTS statistical_data (
     stat_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '统计ID',
+    region_id INT NOT NULL COMMENT '区域ID',
     station_id INT NOT NULL COMMENT '站点ID',
+    sensor_id INT COMMENT '传感器ID',
     stat_period VARCHAR(20) NOT NULL COMMENT '统计时间段（日、周、月、季、年）',
     stat_type VARCHAR(50) NOT NULL COMMENT '统计类型',
     stat_date DATE NOT NULL COMMENT '统计日期',
@@ -55,13 +99,22 @@ CREATE TABLE IF NOT EXISTS statistical_data (
     max_temperature DECIMAL(5, 2) COMMENT '最高温度（℃）',
     min_temperature DECIMAL(5, 2) COMMENT '最低温度（℃）',
     avg_humidity DECIMAL(5, 2) COMMENT '平均湿度（%）',
+    max_humidity DECIMAL(5, 2) COMMENT '最高湿度（%）',
+    min_humidity DECIMAL(5, 2) COMMENT '最低湿度（%）',
     total_rainfall DECIMAL(8, 2) DEFAULT 0 COMMENT '总降雨量（mm）',
     avg_wind_speed DECIMAL(5, 2) COMMENT '平均风速（m/s）',
+    max_wind_speed DECIMAL(5, 2) COMMENT '最大风速（m/s）',
+    avg_pm25 DECIMAL(6, 2) COMMENT '平均PM2.5（μg/m³）',
+    avg_pm10 DECIMAL(6, 2) COMMENT '平均PM10（μg/m³）',
     data_source VARCHAR(50) NOT NULL COMMENT '数据来源',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (region_id) REFERENCES region(region_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (station_id) REFERENCES monitoring_station(station_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (sensor_id) REFERENCES sensor(sensor_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_region_period (region_id, stat_period),
     INDEX idx_station_period (station_id, stat_period),
+    INDEX idx_sensor_period (sensor_id, stat_period),
     INDEX idx_stat_date (stat_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='统计分析数据表';
 
@@ -515,17 +568,41 @@ DELETE FROM abnormal_data WHERE data_id = OLD.data_id;
 
 -- 5. 初始化数据
 
--- 5.1 初始化环境监测站
-INSERT IGNORE INTO monitoring_station (
-    station_name, latitude, longitude, altitude, station_type, installation_date, status
+-- 5.1 初始化区域信息
+INSERT IGNORE INTO region (
+    region_name, region_type, latitude, longitude, manager_id
 ) VALUES 
-('监测站1', 39.9042, 116.4074, 50.0, '气象站', '2023-01-01', '正常'),
-('监测站2', 39.9142, 116.4174, 60.0, '土壤监测站', '2023-02-01', '正常'),
-('监测站3', 39.9242, 116.4274, 70.0, '空气质量监测站', '2023-03-01', '正常'),
-('监测站4', 39.9342, 116.4374, 80.0, '综合监测站', '2023-04-01', '维护'),
-('监测站5', 39.9442, 116.4474, 90.0, '气象站', '2023-05-01', '正常');
+('森林区域1', '森林', 39.9042, 116.4074, 1),
+('草地区域1', '草地', 39.9142, 116.4174, 2),
+('森林区域2', '森林', 39.9242, 116.4274, 1),
+('草地区域2', '草地', 39.9342, 116.4374, 2),
+('混合区域1', '森林', 39.9442, 116.4474, 1);
 
--- 5.2 初始化报表模板
+-- 5.2 初始化环境监测站
+INSERT IGNORE INTO monitoring_station (
+    station_name, region_id, latitude, longitude, altitude, station_type, installation_date, status
+) VALUES 
+('监测站1', 1, 39.9042, 116.4074, 50.0, '气象站', '2023-01-01', '正常'),
+('监测站2', 2, 39.9142, 116.4174, 60.0, '土壤监测站', '2023-02-01', '正常'),
+('监测站3', 1, 39.9242, 116.4274, 70.0, '空气质量监测站', '2023-03-01', '正常'),
+('监测站4', 2, 39.9342, 116.4374, 80.0, '综合监测站', '2023-04-01', '正常');
+
+-- 5.3 初始化传感器信息
+INSERT IGNORE INTO sensor (
+    sensor_code, region_id, station_id, area_id, monitoring_type, device_model, installation_date, communication_protocol, status
+) VALUES 
+('SENSOR_001', 1, 1, 1, '温度', 'Model-T100', '2023-01-01', 'RS485', '正常'),
+('SENSOR_002', 1, 1, 1, '湿度', 'Model-H200', '2023-01-01', 'RS485', '正常'),
+('SENSOR_003', 2, 2, 2, '土壤温度', 'Model-ST300', '2023-02-01', 'LoRa', '正常'),
+('SENSOR_004', 2, 2, 2, '土壤湿度', 'Model-SH400', '2023-02-01', 'LoRa', '正常'),
+('SENSOR_005', 1, 3, 3, 'PM2.5', 'Model-PM500', '2023-03-01', 'NB-IoT', '正常'),
+('SENSOR_006', 1, 3, 3, 'PM10', 'Model-PM600', '2023-03-01', 'NB-IoT', '正常'),
+('SENSOR_007', 2, 4, 4, '风速', 'Model-WS700', '2023-04-01', 'RS485', '正常'),
+('SENSOR_008', 2, 4, 4, '风向', 'Model-WD800', '2023-04-01', 'RS485', '正常'),
+('SENSOR_009', 3, 4, 4, '温度', 'Model-T100', '2023-05-01', 'RS485', '正常'),
+('SENSOR_010', 3, 4, 4, '湿度', 'Model-H200', '2023-05-01', 'RS485', '正常');
+
+-- 5.4 初始化报表模板
 INSERT IGNORE INTO report_template (template_name, report_type, template_content) VALUES 
 ('每日环境监测报表', '日报', '每日环境监测数据汇总报表模板'),
 ('每周环境统计报表', '周报', '每周环境统计数据汇总报表模板'),
@@ -533,7 +610,7 @@ INSERT IGNORE INTO report_template (template_name, report_type, template_content
 ('季度环境趋势报表', '季报', '季度环境趋势分析报表模板'),
 ('年度环境总结报表', '年报', '年度环境总结分析报表模板');
 
--- 5.3 初始化系统用户
+-- 5.5 初始化系统用户
 INSERT IGNORE INTO system_user (username, password, role, email, phone) VALUES 
 ('admin', '123456', '管理员', 'admin@example.com', '13800138000'),
 ('user1', '123456', '普通用户', 'user1@example.com', '13800138001'),

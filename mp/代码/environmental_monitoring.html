@@ -356,6 +356,15 @@
             <div class="nav-tab active" data-tab="realtime">
                 <i class="fas fa-clock"></i> 实时数据
             </div>
+            <div class="nav-tab" data-tab="regions">
+                <i class="fas fa-map-marker-alt"></i> 区域管理
+            </div>
+            <div class="nav-tab" data-tab="sensors">
+                <i class="fas fa-microchip"></i> 传感器管理
+            </div>
+            <div class="nav-tab" data-tab="environmental-data">
+                <i class="fas fa-database"></i> 监测数据
+            </div>
             <div class="nav-tab" data-tab="statistics">
                 <i class="fas fa-chart-bar"></i> 统计分析
             </div>
@@ -367,6 +376,12 @@
             </div>
             <div class="nav-tab" data-tab="abnormal">
                 <i class="fas fa-exclamation-triangle"></i> 异常数据
+            </div>
+            <div class="nav-tab" data-tab="sensor-summary">
+                <i class="fas fa-chart-pie"></i> 传感器数据汇总
+            </div>
+            <div class="nav-tab" data-tab="region-daily-avg">
+                <i class="fas fa-chart-area"></i> 区域日均值实图
             </div>
             <div class="nav-tab" data-tab="reports">
                 <i class="fas fa-file-alt"></i> 报表生成
@@ -419,7 +434,7 @@
                             <option value="监测站1">监测站1</option>
                             <option value="监测站2">监测站2</option>
                             <option value="监测站3">监测站3</option>
-                            <option value="监测站5">监测站5</option>
+                            <option value="监测站4">监测站4</option>
                         </select>
                         <select id="days-select" class="filter-btn">
                             <option value="7">最近7天</option>
@@ -445,7 +460,7 @@
                     <div class="stats-filter">
                         <select id="air-station-select" class="filter-btn">
                             <option value="监测站3">监测站3</option>
-                            <option value="监测站5">监测站5</option>
+                            <option value="监测站4">监测站4</option>
                         </select>
                         <select id="air-days-select" class="filter-btn">
                             <option value="7">最近7天</option>
@@ -488,6 +503,148 @@
             </div>
         </div>
 
+        <!-- 区域管理标签页 -->
+        <div id="regions" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-map-marker-alt"></i> 区域管理</h3>
+                    <button class="btn btn-primary" onclick="openRegionModal()">
+                        <i class="fas fa-plus"></i> 新增区域
+                    </button>
+                </div>
+                <div class="stats-filter">
+                    <select id="region-type-filter" class="filter-btn">
+                        <option value="">全部类型</option>
+                        <option value="森林">森林</option>
+                        <option value="草地">草地</option>
+                    </select>
+                    <button class="btn btn-info" onclick="loadRegions()">
+                        <i class="fas fa-search"></i> 查询
+                    </button>
+                </div>
+                <div id="regions-table" class="loading">
+                    <i class="fas fa-spinner"></i> 加载中...
+                </div>
+            </div>
+        </div>
+
+        <!-- 传感器管理标签页 -->
+        <div id="sensors" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-microchip"></i> 传感器管理</h3>
+                    <button class="btn btn-primary" onclick="openSensorModal()">
+                        <i class="fas fa-plus"></i> 新增传感器
+                    </button>
+                </div>
+                <div class="stats-filter">
+                    <select id="sensor-region-filter" class="filter-btn">
+                        <option value="">全部区域</option>
+                    </select>
+                    <select id="sensor-type-filter" class="filter-btn">
+                        <option value="">全部类型</option>
+                    </select>
+                    <select id="sensor-status-filter" class="filter-btn">
+                        <option value="">全部状态</option>
+                        <option value="正常">正常</option>
+                        <option value="故障">故障</option>
+                        <option value="维护">维护</option>
+                    </select>
+                    <button class="btn btn-info" onclick="loadSensors()">
+                        <i class="fas fa-search"></i> 查询
+                    </button>
+                </div>
+                <div id="sensors-table" class="loading">
+                    <i class="fas fa-spinner"></i> 加载中...
+                </div>
+            </div>
+        </div>
+
+        <!-- 监测数据标签页 -->
+        <div id="environmental-data" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-database"></i> 监测数据管理</h3>
+                    <button class="btn btn-primary" onclick="openDataModal()">
+                        <i class="fas fa-plus"></i> 新增数据
+                    </button>
+                </div>
+                <div class="stats-filter">
+                    <select id="data-region-filter" class="filter-btn">
+                        <option value="">全部区域</option>
+                    </select>
+                    <select id="data-sensor-filter" class="filter-btn">
+                        <option value="">全部传感器</option>
+                    </select>
+                    <input type="text" id="data-sensor-code" class="filter-btn" placeholder="传感器编号">
+                    <select id="data-status-filter" class="filter-btn">
+                        <option value="">全部状态</option>
+                        <option value="有效">有效</option>
+                        <option value="无效">无效</option>
+                    </select>
+                    <input type="date" id="data-start-date" class="date-picker" placeholder="开始日期">
+                    <input type="date" id="data-end-date" class="date-picker" placeholder="结束日期">
+                    <button class="btn btn-info" onclick="loadEnvironmentalData()">
+                        <i class="fas fa-search"></i> 查询
+                    </button>
+                </div>
+                <div id="environmental-data-table" class="loading">
+                    <i class="fas fa-spinner"></i> 加载中...
+                </div>
+            </div>
+        </div>
+
+        <!-- 传感器数据汇总标签页 -->
+        <div id="sensor-summary" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-pie"></i> 传感器数据汇总</h3>
+                    <div class="stats-filter">
+                        <select id="sensor-summary-filter" class="filter-btn">
+                            <option value="all">全部传感器</option>
+                            <option value="温度">温度传感器</option>
+                            <option value="湿度">湿度传感器</option>
+                            <option value="PM2.5">PM2.5传感器</option>
+                            <option value="PM10">PM10传感器</option>
+                            <option value="风速">风速传感器</option>
+                        </select>
+                        <button class="btn btn-info" onclick="loadSensorSummary()">
+                            <i class="fas fa-search"></i> 查询
+                        </button>
+                    </div>
+                </div>
+                <div id="sensor-summary-content" class="loading">
+                    <i class="fas fa-spinner"></i> 加载中...
+                </div>
+            </div>
+        </div>
+
+        <!-- 区域日均值实图标签页 -->
+        <div id="region-daily-avg" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-area"></i> 区域日均值实图</h3>
+                    <div class="stats-filter">
+                        <select id="region-daily-region" class="filter-btn">
+                            <option value="全部区域">全部区域</option>
+                            <option value="森林区域1">森林区域1</option>
+                            <option value="草地区域1">草地区域1</option>
+                            <option value="森林区域2">森林区域2</option>
+                            <option value="草地区域2">草地区域2</option>
+                            <option value="混合区域1">混合区域1</option>
+                        </select>
+                        <input type="date" id="region-daily-date" class="date-picker" value="">
+                        <button class="btn btn-info" onclick="loadRegionDailyAvg()">
+                            <i class="fas fa-chart-area"></i> 生成实图
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="region-daily-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- 报表生成标签页 -->
         <div id="reports" class="tab-content">
             <div class="card">
@@ -498,10 +655,26 @@
                         <button class="btn btn-success" onclick="generateDailyReport()">
                             <i class="fas fa-file-export"></i> 生成日报
                         </button>
+                        <button class="btn btn-success" onclick="generateWeeklyReport()">
+                            <i class="fas fa-file-export"></i> 生成周报
+                        </button>
                     </div>
                 </div>
                 <div id="report-result">
                     <p>请选择日期并点击生成按钮</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模态框 -->
+        <div id="modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+            <div class="modal-content" style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                    <h2 id="modal-title" style="margin: 0; font-size: 20px; color: #2c3e50;"></h2>
+                    <span class="close" onclick="closeModal()" style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                </div>
+                <div id="modal-body">
+                    <!-- 模态框内容将通过JavaScript动态加载 -->
                 </div>
             </div>
         </div>
@@ -535,7 +708,172 @@
             loadEnvironmentalTrend();
             loadAirQuality();
             loadAbnormalData();
+            
+            // 填充所有页面的下拉选择框
+            loadAllFilters();
         });
+        
+        // 填充所有页面的下拉选择框
+        function loadAllFilters() {
+            // 填充监测数据页面的下拉选择框
+            loadDataFilters();
+            
+            // 填充传感器管理页面的下拉选择框
+            loadSensorFilters();
+            
+            // 填充区域日均值实图页面的下拉选择框
+            loadRegionDailyFilters();
+        }
+        
+        // 填充监测数据页面的下拉选择框
+        function loadDataFilters() {
+            loadDataRegionFilter();
+            loadDataSensorFilter();
+        }
+        
+        // 填充区域下拉选择框
+        function loadDataRegionFilter() {
+            const select = document.getElementById('data-region-filter');
+            fetch(`${API_BASE_URL}/regions`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 清空现有选项，保留默认选项
+                        const defaultOption = select.querySelector('option[value=""]');
+                        select.innerHTML = '';
+                        select.appendChild(defaultOption);
+                        
+                        // 添加区域选项
+                        data.data.forEach(region => {
+                            const option = document.createElement('option');
+                            option.value = region.region_id;
+                            option.textContent = region.region_name;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('加载区域数据失败:', error);
+                });
+        }
+        
+        // 填充传感器下拉选择框
+        function loadDataSensorFilter() {
+            const select = document.getElementById('data-sensor-filter');
+            fetch(`${API_BASE_URL}/sensors`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 清空现有选项，保留默认选项
+                        const defaultOption = select.querySelector('option[value=""]');
+                        select.innerHTML = '';
+                        select.appendChild(defaultOption);
+                        
+                        // 添加传感器选项
+                        data.data.forEach(sensor => {
+                            const option = document.createElement('option');
+                            option.value = sensor.sensor_id;
+                            option.textContent = sensor.sensor_code;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('加载传感器数据失败:', error);
+                });
+        }
+        
+        // 填充传感器管理页面的下拉选择框
+        function loadSensorFilters() {
+            loadSensorRegionFilter();
+            loadSensorTypeFilter();
+        }
+        
+        // 填充传感器管理页面的区域下拉选择框
+        function loadSensorRegionFilter() {
+            const select = document.getElementById('sensor-region-filter');
+            fetch(`${API_BASE_URL}/regions`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 清空现有选项，保留默认选项
+                        const defaultOption = select.querySelector('option[value=""]');
+                        select.innerHTML = '';
+                        select.appendChild(defaultOption);
+                        
+                        // 添加区域选项
+                        data.data.forEach(region => {
+                            const option = document.createElement('option');
+                            option.value = region.region_id;
+                            option.textContent = region.region_name;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('加载传感器区域数据失败:', error);
+                });
+        }
+        
+        // 填充传感器管理页面的类型下拉选择框
+        function loadSensorTypeFilter() {
+            const select = document.getElementById('sensor-type-filter');
+            fetch(`${API_BASE_URL}/sensors`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 清空现有选项，保留默认选项
+                        const defaultOption = select.querySelector('option[value=""]');
+                        select.innerHTML = '';
+                        select.appendChild(defaultOption);
+                        
+                        // 获取所有唯一的传感器类型
+                        const types = [...new Set(data.data.map(sensor => sensor.monitoring_type))];
+                        
+                        // 添加类型选项
+                        types.forEach(type => {
+                            const option = document.createElement('option');
+                            option.value = type;
+                            option.textContent = type;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('加载传感器类型数据失败:', error);
+                });
+        }
+        
+        // 填充区域日均值实图页面的下拉选择框
+        function loadRegionDailyFilters() {
+            loadRegionDailyRegionFilter();
+        }
+        
+        // 填充区域日均值实图页面的区域下拉选择框
+        function loadRegionDailyRegionFilter() {
+            const select = document.getElementById('region-daily-region');
+            fetch(`${API_BASE_URL}/regions`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 清空现有选项，保留默认选项
+                        const defaultOption = select.querySelector('option[value="全部区域"]');
+                        select.innerHTML = '';
+                        select.appendChild(defaultOption);
+                        
+                        // 添加区域选项
+                        data.data.forEach(region => {
+                            const option = document.createElement('option');
+                            option.value = region.region_name;
+                            option.textContent = region.region_name;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('加载区域日均值区域数据失败:', error);
+                });
+        }
 
         // 更新当前时间
         function updateCurrentTime() {
@@ -726,15 +1064,15 @@
             const dates = data.map(item => item.trend_date);
             const temperatures = data.map(item => {
                 const temp = parseFloat(item.avg_temperature);
-                return isNaN(temp) ? 0 : temp.toFixed(1);
+                return isNaN(temp) ? 0 : temp;
             });
             const humidity = data.map(item => {
                 const hum = parseFloat(item.avg_humidity);
-                return isNaN(hum) ? 0 : hum.toFixed(1);
+                return isNaN(hum) ? 0 : hum;
             });
             const rainfall = data.map(item => {
                 const rain = parseFloat(item.total_rainfall);
-                return isNaN(rain) ? 0 : rain.toFixed(1);
+                return isNaN(rain) ? 0 : rain;
             });
 
             // 销毁现有图表
@@ -1075,6 +1413,843 @@
                 this.classList.add('active');
                 loadStatistics();
             });
+        });
+
+        // 区域管理函数
+        function loadRegions() {
+            const regionType = document.getElementById('region-type-filter').value;
+            fetch(`${API_BASE_URL}/regions${regionType ? `?region_type=${regionType}` : ''}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderRegionsTable(data.data);
+                    } else {
+                        document.getElementById('regions-table').innerHTML = `<div class="alert alert-error">加载失败: ${data.error}</div>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('regions-table').innerHTML = `<div class="alert alert-error">加载失败: ${error.message}</div>`;
+                });
+        }
+
+        function renderRegionsTable(regions) {
+            if (regions.length === 0) {
+                document.getElementById('regions-table').innerHTML = '<div class="alert alert-warning">暂无区域数据</div>';
+                return;
+            }
+
+            let html = '<table>';
+            html += `
+                <thead>
+                    <tr>
+                        <th>区域ID</th>
+                        <th>区域名称</th>
+                        <th>区域类型</th>
+                        <th>纬度</th>
+                        <th>经度</th>
+                        <th>负责人ID</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            regions.forEach(region => {
+                html += `
+                    <tr>
+                        <td>${region.region_id}</td>
+                        <td>${region.region_name}</td>
+                        <td>${region.region_type}</td>
+                        <td>${region.latitude}</td>
+                        <td>${region.longitude}</td>
+                        <td>${region.manager_id || '-'}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="openRegionModal(${region.region_id})" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteRegion(${region.region_id})" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('regions-table').innerHTML = html;
+        }
+
+        function openRegionModal(regionId = null) {
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+
+            modalTitle.textContent = regionId ? '编辑区域' : '新增区域';
+            modalBody.innerHTML = `
+                <form id="region-form">
+                    <input type="hidden" id="region-id" value="${regionId || ''}">
+                    <div style="margin-bottom: 15px;">
+                        <label for="region-name" style="display: block; margin-bottom: 5px; font-weight: 500;">区域名称:</label>
+                        <input type="text" id="region-name" name="region_name" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="region-type" style="display: block; margin-bottom: 5px; font-weight: 500;">区域类型:</label>
+                        <select id="region-type" name="region_type" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            <option value="森林">森林</option>
+                            <option value="草地">草地</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="region-latitude" style="display: block; margin-bottom: 5px; font-weight: 500;">纬度:</label>
+                        <input type="number" id="region-latitude" name="latitude" step="0.000001" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="region-longitude" style="display: block; margin-bottom: 5px; font-weight: 500;">经度:</label>
+                        <input type="number" id="region-longitude" name="longitude" step="0.000001" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="region-manager-id" style="display: block; margin-bottom: 5px; font-weight: 500;">负责人ID:</label>
+                        <input type="number" id="region-manager-id" name="manager_id" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" onclick="closeModal()" style="padding: 10px 20px; margin-right: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; background-color: white; font-size: 14px;">取消</button>
+                        <button type="submit" style="padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; background-color: #3498db; color: white; font-size: 14px;">保存</button>
+                    </div>
+                </form>
+            `;
+
+            // 添加表单提交事件
+            document.getElementById('region-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveRegion();
+            });
+
+            // 如果是编辑模式，填充现有数据
+            if (regionId) {
+                fetch(`${API_BASE_URL}/regions/${regionId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const region = data.data;
+                            document.getElementById('region-name').value = region.region_name;
+                            document.getElementById('region-type').value = region.region_type;
+                            document.getElementById('region-latitude').value = region.latitude;
+                            document.getElementById('region-longitude').value = region.longitude;
+                            document.getElementById('region-manager-id').value = region.manager_id || '';
+                        }
+                    });
+            }
+
+            modal.style.display = 'block';
+        }
+
+        function saveRegion() {
+            const regionId = document.getElementById('region-id').value;
+            const regionName = document.getElementById('region-name').value;
+            const regionType = document.getElementById('region-type').value;
+            const latitude = document.getElementById('region-latitude').value;
+            const longitude = document.getElementById('region-longitude').value;
+            const managerId = document.getElementById('region-manager-id').value;
+
+            const data = {
+                region_name: regionName,
+                region_type: regionType,
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude),
+                manager_id: managerId ? parseInt(managerId) : null
+            };
+
+            const url = regionId ? `${API_BASE_URL}/regions/${regionId}` : `${API_BASE_URL}/regions`;
+            const method = regionId ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    loadRegions();
+                    showAlert('操作成功', 'success');
+                } else {
+                    showAlert(`操作失败: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                showAlert(`操作失败: ${error.message}`, 'error');
+            });
+        }
+
+        function deleteRegion(regionId) {
+            if (confirm('确定要删除这个区域吗？')) {
+                fetch(`${API_BASE_URL}/regions/${regionId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadRegions();
+                        showAlert('删除成功', 'success');
+                    } else {
+                        showAlert(`删除失败: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    showAlert(`删除失败: ${error.message}`, 'error');
+                });
+            }
+        }
+
+        // 传感器管理函数
+        function loadSensors() {
+            const regionId = document.getElementById('sensor-region-filter').value;
+            const sensorType = document.getElementById('sensor-type-filter').value;
+            const status = document.getElementById('sensor-status-filter').value;
+
+            let url = `${API_BASE_URL}/sensors`;
+            const params = [];
+            if (regionId) params.push(`region_id=${regionId}`);
+            if (sensorType) params.push(`monitoring_type=${sensorType}`);
+            if (status) params.push(`status=${status}`);
+            if (params.length > 0) url += `?${params.join('&')}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderSensorsTable(data.data);
+                    } else {
+                        document.getElementById('sensors-table').innerHTML = `<div class="alert alert-error">加载失败: ${data.error}</div>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('sensors-table').innerHTML = `<div class="alert alert-error">加载失败: ${error.message}</div>`;
+                });
+        }
+
+        function renderSensorsTable(sensors) {
+            if (sensors.length === 0) {
+                document.getElementById('sensors-table').innerHTML = '<div class="alert alert-warning">暂无传感器数据</div>';
+                return;
+            }
+
+            let html = '<table>';
+            html += `
+                <thead>
+                    <tr>
+                        <th>传感器ID</th>
+                        <th>传感器编号</th>
+                        <th>区域ID</th>
+                        <th>站点ID</th>
+                        <th>监测类型</th>
+                        <th>设备型号</th>
+                        <th>安装时间</th>
+                        <th>通信协议</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            sensors.forEach(sensor => {
+                html += `
+                    <tr>
+                        <td>${sensor.sensor_id}</td>
+                        <td>${sensor.sensor_code}</td>
+                        <td>${sensor.region_id}</td>
+                        <td>${sensor.station_id}</td>
+                        <td>${sensor.monitoring_type}</td>
+                        <td>${sensor.device_model}</td>
+                        <td>${sensor.installation_date}</td>
+                        <td>${sensor.communication_protocol}</td>
+                        <td><span class="status-badge status-${sensor.status === '正常' ? 'normal' : sensor.status === '故障' ? 'danger' : 'warning'}">${sensor.status}</span></td>
+                        <td>
+                            <button class="btn btn-primary" onclick="openSensorModal(${sensor.sensor_id})" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">
+                                <i class="fas fa-edit"></i> 编辑
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteSensor(${sensor.sensor_id})" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('sensors-table').innerHTML = html;
+        }
+
+        function openSensorModal(sensorId = null) {
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+
+            modalTitle.textContent = sensorId ? '编辑传感器' : '新增传感器';
+            modalBody.innerHTML = `
+                <form id="sensor-form">
+                    <input type="hidden" id="sensor-id" value="${sensorId || ''}">
+                    <div style="margin-bottom: 15px;">
+                        <label for="sensor-code" style="display: block; margin-bottom: 5px; font-weight: 500;">传感器编号:</label>
+                        <input type="text" id="sensor-code" name="sensor_code" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="sensor-region-id" style="display: block; margin-bottom: 5px; font-weight: 500;">区域ID:</label>
+                        <input type="number" id="sensor-region-id" name="region_id" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="sensor-station-id" style="display: block; margin-bottom: 5px; font-weight: 500;">站点ID:</label>
+                        <input type="number" id="sensor-station-id" name="station_id" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="sensor-type" style="display: block; margin-bottom: 5px; font-weight: 500;">监测类型:</label>
+                        <input type="text" id="sensor-type" name="monitoring_type" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="sensor-model" style="display: block; margin-bottom: 5px; font-weight: 500;">设备型号:</label>
+                        <input type="text" id="sensor-model" name="device_model" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="sensor-install-date" style="display: block; margin-bottom: 5px; font-weight: 500;">安装时间:</label>
+                        <input type="date" id="sensor-install-date" name="installation_date" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="sensor-protocol" style="display: block; margin-bottom: 5px; font-weight: 500;">通信协议:</label>
+                        <input type="text" id="sensor-protocol" name="communication_protocol" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="sensor-status" style="display: block; margin-bottom: 5px; font-weight: 500;">状态:</label>
+                        <select id="sensor-status" name="status" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            <option value="正常">正常</option>
+                            <option value="故障">故障</option>
+                            <option value="维护">维护</option>
+                        </select>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" onclick="closeModal()" style="padding: 10px 20px; margin-right: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; background-color: white; font-size: 14px;">取消</button>
+                        <button type="submit" style="padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; background-color: #3498db; color: white; font-size: 14px;">保存</button>
+                    </div>
+                </form>
+            `;
+
+            // 添加表单提交事件
+            document.getElementById('sensor-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveSensor();
+            });
+
+            // 如果是编辑模式，填充现有数据
+            if (sensorId) {
+                fetch(`${API_BASE_URL}/sensors/${sensorId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const sensor = data.data;
+                            document.getElementById('sensor-code').value = sensor.sensor_code;
+                            document.getElementById('sensor-region-id').value = sensor.region_id;
+                            document.getElementById('sensor-station-id').value = sensor.station_id;
+                            document.getElementById('sensor-type').value = sensor.monitoring_type;
+                            document.getElementById('sensor-model').value = sensor.device_model;
+                            document.getElementById('sensor-install-date').value = sensor.installation_date;
+                            document.getElementById('sensor-protocol').value = sensor.communication_protocol;
+                            document.getElementById('sensor-status').value = sensor.status;
+                        }
+                    });
+            }
+
+            modal.style.display = 'block';
+        }
+
+        function saveSensor() {
+            const sensorId = document.getElementById('sensor-id').value;
+            const sensorCode = document.getElementById('sensor-code').value;
+            const regionId = document.getElementById('sensor-region-id').value;
+            const stationId = document.getElementById('sensor-station-id').value;
+            const monitoringType = document.getElementById('sensor-type').value;
+            const deviceModel = document.getElementById('sensor-model').value;
+            const installationDate = document.getElementById('sensor-install-date').value;
+            const communicationProtocol = document.getElementById('sensor-protocol').value;
+            const status = document.getElementById('sensor-status').value;
+
+            const data = {
+                sensor_code: sensorCode,
+                region_id: parseInt(regionId),
+                station_id: parseInt(stationId),
+                monitoring_type: monitoringType,
+                device_model: deviceModel,
+                installation_date: installationDate,
+                communication_protocol: communicationProtocol,
+                status: status
+            };
+
+            const url = sensorId ? `${API_BASE_URL}/sensors/${sensorId}` : `${API_BASE_URL}/sensors`;
+            const method = sensorId ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal();
+                    loadSensors();
+                    showAlert('操作成功', 'success');
+                } else {
+                    showAlert(`操作失败: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                showAlert(`操作失败: ${error.message}`, 'error');
+            });
+        }
+
+        function deleteSensor(sensorId) {
+            if (confirm('确定要删除这个传感器吗？')) {
+                fetch(`${API_BASE_URL}/sensors/${sensorId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadSensors();
+                        showAlert('删除成功', 'success');
+                    } else {
+                        showAlert(`删除失败: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    showAlert(`删除失败: ${error.message}`, 'error');
+                });
+            }
+        }
+
+        // 监测数据管理函数
+        function loadEnvironmentalData() {
+            const regionId = document.getElementById('data-region-filter').value;
+            // 只使用sensor_code进行查询，不使用sensor_id
+            const sensorCode = document.getElementById('data-sensor-code').value;
+            const dataStatus = document.getElementById('data-status-filter').value;
+            const startDate = document.getElementById('data-start-date').value;
+            const endDate = document.getElementById('data-end-date').value;
+
+            let url = `${API_BASE_URL}/environmental-data?`;
+            const params = [];
+            if (regionId) params.push(`region_id=${regionId}`);
+            // 当sensorCode有值时，只使用sensor_code进行查询
+            if (sensorCode) {
+                params.push(`sensor_code=${sensorCode}`);
+            } else {
+                // 只有当sensorCode为空时，才使用sensor_id查询
+                const sensorId = document.getElementById('data-sensor-filter').value;
+                if (sensorId) params.push(`sensor_id=${sensorId}`);
+            }
+            if (dataStatus) params.push(`data_status=${dataStatus}`);
+            if (startDate) params.push(`start_time=${startDate}T00:00:00`);
+            if (endDate) params.push(`end_time=${endDate}T23:59:59`);
+            url += params.join('&');
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderEnvironmentalDataTable(data.data);
+                    } else {
+                        document.getElementById('environmental-data-table').innerHTML = `<div class="alert alert-error">加载失败: ${data.error}</div>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('environmental-data-table').innerHTML = `<div class="alert alert-error">加载失败: ${error.message}</div>`;
+                });
+        }
+
+        function renderEnvironmentalDataTable(data) {
+            if (data.length === 0) {
+                document.getElementById('environmental-data-table').innerHTML = '<div class="alert alert-warning">暂无监测数据</div>';
+                return;
+            }
+
+            let html = '<table>';
+            html += `
+                <thead>
+                    <tr>
+                        <th>数据ID</th>
+                        <th>传感器编号</th>
+                        <th>监测类型</th>
+                        <th>站点名称</th>
+                        <th>区域名称</th>
+                        <th>采集时间</th>
+                        <th>温度</th>
+                        <th>湿度</th>
+                        <th>风速</th>
+                        <th>数据状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            data.forEach(item => {
+                html += `
+                    <tr>
+                        <td>${item.data_id}</td>
+                        <td>${item.sensor_code || '-'}</td>
+                        <td>${item.monitoring_type || '-'}</td>
+                        <td>${item.station_name}</td>
+                        <td>${item.region_name}</td>
+                        <td>${item.collection_time}</td>
+                        <td>${item.temperature ? `${item.temperature}℃` : '-'}</td>
+                        <td>${item.humidity ? `${item.humidity}%` : '-'}</td>
+                        <td>${item.wind_speed ? `${item.wind_speed}m/s` : '-'}</td>
+                        <td><span class="status-badge status-${item.data_status === '有效' ? 'normal' : 'danger'}">${item.data_status}</span></td>
+                        <td>
+                            <button class="btn btn-primary" onclick="editDataStatus(${item.data_id}, '${item.data_status}')" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;">
+                                <i class="fas fa-edit"></i> 切换状态
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteEnvironmentalData(${item.data_id})" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('environmental-data-table').innerHTML = html;
+        }
+
+        function openDataModal() {
+            // 简化版的数据添加功能
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+
+            modalTitle.textContent = '新增监测数据';
+            modalBody.innerHTML = `
+                <form id="data-form">
+                    <p style="color: #666; margin-bottom: 15px;">监测数据通常由系统自动采集，手动添加功能暂未完全实现。</p>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button type="button" onclick="closeModal()" style="padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; background-color: #3498db; color: white; font-size: 14px;">关闭</button>
+                    </div>
+                </form>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        function editDataStatus(dataId, currentStatus) {
+            const newStatus = currentStatus === '有效' ? '无效' : '有效';
+            if (confirm(`确定要将数据状态切换为${newStatus}吗？`)) {
+                fetch(`${API_BASE_URL}/environmental-data/${dataId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ data_status: newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadEnvironmentalData();
+                        showAlert('状态更新成功', 'success');
+                    } else {
+                        showAlert(`状态更新失败: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    showAlert(`状态更新失败: ${error.message}`, 'error');
+                });
+            }
+        }
+
+        function deleteEnvironmentalData(dataId) {
+            if (confirm('确定要删除这条监测数据吗？')) {
+                fetch(`${API_BASE_URL}/environmental-data/${dataId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadEnvironmentalData();
+                        showAlert('删除成功', 'success');
+                    } else {
+                        showAlert(`删除失败: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    showAlert(`删除失败: ${error.message}`, 'error');
+                });
+            }
+        }
+
+        // 模态框函数
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // 点击模态框外部关闭模态框
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // 显示提示信息
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '10000';
+            alertDiv.style.padding = '15px 20px';
+            alertDiv.style.borderRadius = '6px';
+            alertDiv.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            alertDiv.style.transition = 'all 0.3s ease';
+            
+            document.body.appendChild(alertDiv);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                alertDiv.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(alertDiv);
+                }, 300);
+            }, 3000);
+        }
+
+        // 传感器数据汇总函数
+        function loadSensorSummary() {
+            const sensorType = document.getElementById('sensor-summary-filter').value;
+            let url = `${API_BASE_URL}/sensor-summary`;
+            if (sensorType !== 'all') {
+                url += `?monitoring_type=${sensorType}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderSensorSummary(data.data);
+                    } else {
+                        document.getElementById('sensor-summary-content').innerHTML = `<div class="alert alert-error">加载失败: ${data.error}</div>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('sensor-summary-content').innerHTML = `<div class="alert alert-error">加载失败: ${error.message}</div>`;
+                });
+        }
+
+        // 渲染传感器数据汇总
+        function renderSensorSummary(data) {
+            if (data.length === 0) {
+                document.getElementById('sensor-summary-content').innerHTML = '<div class="alert alert-warning">暂无传感器数据汇总</div>';
+                return;
+            }
+
+            let html = '<div class="realtime-grid">';
+            data.forEach(sensor => {
+                html += `
+                    <div class="data-card">
+                        <h4>${sensor.sensor_name} <small>(${sensor.monitoring_type})</small></h4>
+                        <div style="margin-top: 15px;">
+                            <div class="data-value">${sensor.data_count}<span class="data-unit">条数据</span></div>
+                            <div class="data-label">数据总量</div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <div class="data-value">${sensor.avg_value}<span class="data-unit">${sensor.unit}</span></div>
+                            <div class="data-label">平均值</div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <div class="data-value">${sensor.max_value}<span class="data-unit">${sensor.unit}</span></div>
+                            <div class="data-label">最大值</div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <div class="data-value">${sensor.min_value}<span class="data-unit">${sensor.unit}</span></div>
+                            <div class="data-label">最小值</div>
+                        </div>
+                        <div style="margin-top: 15px; font-size: 12px; color: #999;">
+                            最新数据时间: ${sensor.last_update_time}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            document.getElementById('sensor-summary-content').innerHTML = html;
+        }
+
+        // 区域日均值实图函数
+        function loadRegionDailyAvg() {
+            const regionName = document.getElementById('region-daily-region').value;
+            const selectedDate = document.getElementById('region-daily-date').value || new Date().toISOString().split('T')[0];
+
+            fetch(`${API_BASE_URL}/region-daily-avg?region_name=${regionName}&date=${selectedDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        renderRegionDailyAvg(data.data, regionName, selectedDate);
+                    } else {
+                        console.error('加载区域日均值数据失败:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载区域日均值数据失败:', error);
+                });
+        }
+
+        // 渲染区域日均值实图
+        function renderRegionDailyAvg(data, regionName, date) {
+            const ctx = document.getElementById('region-daily-chart').getContext('2d');
+            
+            // 准备数据
+            const timePoints = data.map(item => item.collection_time);
+            const temperatures = data.map(item => {
+                const temp = parseFloat(item.temperature);
+                return isNaN(temp) ? 0 : temp;
+            });
+            const humidity = data.map(item => {
+                const hum = parseFloat(item.humidity);
+                return isNaN(hum) ? 0 : hum;
+            });
+            const rainfall = data.map(item => {
+                const rain = parseFloat(item.rainfall);
+                return isNaN(rain) ? 0 : rain;
+            });
+
+            // 销毁现有图表
+            if (window.regionDailyChart) {
+                window.regionDailyChart.destroy();
+            }
+
+            // 创建新图表
+            window.regionDailyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timePoints,
+                    datasets: [
+                        {
+                            label: '温度 (℃)',
+                            data: temperatures,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '湿度 (%)',
+                            data: humidity,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '降雨量 (mm)',
+                            data: rainfall,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${regionName} - ${date} 日均值实图`,
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '温度/湿度'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '降雨量 (mm)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('region-daily-date').value = today;
+        });
+
+        // 生成周报函数
+        function generateWeeklyReport() {
+            const reportDate = document.getElementById('report-date').value;
+            if (!reportDate) {
+                document.getElementById('report-result').innerHTML = '<div class="alert alert-warning">请选择日期</div>';
+                return;
+            }
+
+            const date = new Date(reportDate);
+            const year = date.getFullYear();
+            const week = getWeekNumber(date);
+
+            document.getElementById('report-result').innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> 生成中...</div>';
+
+            fetch(`${API_BASE_URL}/generate-weekly-report?year=${year}&week=${week}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('report-result').innerHTML = `
+                            <div class="alert alert-success">报表生成成功</div>
+                            <h4>周报内容</h4>
+                            <div class="report-content">${data.data.report_content}</div>
+                        `;
+                    } else {
+                        document.getElementById('report-result').innerHTML = `<div class="alert alert-error">生成失败: ${data.error}</div>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('report-result').innerHTML = `<div class="alert alert-error">生成失败: ${error.message}</div>`;
+                });
+        }
+
+        // 页面加载完成后加载初始数据
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载区域、传感器和监测数据
+            loadRegions();
+            loadSensors();
+            loadEnvironmentalData();
         });
     </script>
 </body>
