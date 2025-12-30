@@ -346,8 +346,12 @@
                 <h1><i class="fas fa-leaf"></i> 智慧林草系统</h1>
                 <p>环境监测和统计分析模块</p>
             </div>
-            <div>
+            <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="current-time"></span>
+                <span id="user-info" style="display: none;"></span>
+                <button id="logout-btn" style="display: none; padding: 8px 16px; background-color: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    <i class="fas fa-sign-out-alt"></i> 退出登录
+                </button>
             </div>
         </header>
 
@@ -385,6 +389,9 @@
             </div>
             <div class="nav-tab" data-tab="reports">
                 <i class="fas fa-file-alt"></i> 报表生成
+            </div>
+            <div class="nav-tab" data-tab="login">
+                <i class="fas fa-sign-in-alt"></i> 用户登录
             </div>
         </div>
 
@@ -666,6 +673,86 @@
             </div>
         </div>
 
+        <!-- 登录标签页 -->
+        <div id="login" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-sign-in-alt"></i> 用户认证</h3>
+                </div>
+                <div class="login-container" style="max-width: 400px; margin: 20px auto;">
+                    <!-- 切换标签 -->
+                    <div style="display: flex; margin-bottom: 20px; border-bottom: 1px solid #eee;">
+                        <button id="login-tab-btn" class="auth-tab-btn active" onclick="switchAuthTab('login')" style="flex: 1; padding: 10px; background: none; border: none; cursor: pointer; font-size: 16px; font-weight: 500; color: #3498db; border-bottom: 2px solid #3498db;">登录</button>
+                        <button id="register-tab-btn" class="auth-tab-btn" onclick="switchAuthTab('register')" style="flex: 1; padding: 10px; background: none; border: none; cursor: pointer; font-size: 16px; font-weight: 500; color: #666;">注册</button>
+                    </div>
+                    
+                    <!-- 登录表单 -->
+                    <div id="login-form-container">
+                        <form id="login-form">
+                            <div style="margin-bottom: 15px;">
+                                <label for="login-username" style="display: block; margin-bottom: 5px; font-weight: 500;">用户名:</label>
+                                <input type="text" id="login-username" name="username" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label for="login-password" style="display: block; margin-bottom: 5px; font-weight: 500;">密码:</label>
+                                <input type="password" id="login-password" name="password" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <label for="login-role" style="display: block; margin-bottom: 5px; font-weight: 500;">角色:</label>
+                                <select id="login-role" name="role" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                                    <option value="管理员">管理员</option>
+                                    <option value="普通用户">普通用户</option>
+                                </select>
+                            </div>
+                            <div style="text-align: center; margin-top: 20px;">
+                                <button type="submit" style="padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; background-color: #3498db; color: white; font-size: 16px;">
+                                    <i class="fas fa-sign-in-alt"></i> 登录
+                                </button>
+                            </div>
+                        </form>
+                        <div id="login-status" style="margin-top: 20px; text-align: center;"></div>
+                    </div>
+                    
+                    <!-- 注册表单 -->
+                    <div id="register-form-container" style="display: none;">
+                        <form id="register-form">
+                            <div style="margin-bottom: 15px;">
+                                <label for="register-username" style="display: block; margin-bottom: 5px; font-weight: 500;">用户名:</label>
+                                <input type="text" id="register-username" name="username" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label for="register-password" style="display: block; margin-bottom: 5px; font-weight: 500;">密码:</label>
+                                <input type="password" id="register-password" name="password" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label for="register-confirm-password" style="display: block; margin-bottom: 5px; font-weight: 500;">确认密码:</label>
+                                <input type="password" id="register-confirm-password" name="confirm_password" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 500;">角色:</label>
+                                <input type="text" value="普通用户" readonly style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background-color: #f5f7fa;">
+                                <input type="hidden" id="register-role" name="role" value="普通用户">
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <label for="register-email" style="display: block; margin-bottom: 5px; font-weight: 500;">邮箱 (可选):</label>
+                                <input type="email" id="register-email" name="email" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <label for="register-phone" style="display: block; margin-bottom: 5px; font-weight: 500;">电话 (可选):</label>
+                                <input type="tel" id="register-phone" name="phone" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div style="text-align: center; margin-top: 20px;">
+                                <button type="submit" style="padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; background-color: #2ecc71; color: white; font-size: 16px;">
+                                    <i class="fas fa-user-plus"></i> 注册
+                                </button>
+                            </div>
+                        </form>
+                        <div id="register-status" style="margin-top: 20px; text-align: center;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 模态框 -->
         <div id="modal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
             <div class="modal-content" style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
@@ -896,6 +983,20 @@
                     document.getElementById(tabId).classList.add('active');
                 });
             });
+        }
+        
+        // 切换标签页的函数
+        function switchTab(tabId) {
+            // 移除所有活动状态
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 添加当前活动状态
+            const tab = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+            if (tab) {
+                tab.classList.add('active');
+            }
+            document.getElementById(tabId).classList.add('active');
         }
 
         // 加载实时数据
@@ -1249,12 +1350,49 @@
                     if (data.success) {
                         renderAbnormalData(data.data);
                     } else {
-                        console.error('加载异常数据失败:', data.error);
+                        if (data.error.includes('未登录')) {
+                            // 显示登录提示
+                            const abnormalTable = document.getElementById('abnormal-table');
+                            abnormalTable.innerHTML = `
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> 
+                                    加载异常数据失败: ${data.error} <br>
+                                    <button class="btn btn-primary" onclick="switchToLoginTab()" style="margin-top: 10px;">
+                                        <i class="fas fa-sign-in-alt"></i> 前往登录
+                                    </button>
+                                </div>
+                            `;
+                        } else {
+                            console.error('加载异常数据失败:', data.error);
+                        }
                     }
                 })
                 .catch(error => {
                     console.error('加载异常数据失败:', error);
                 });
+        }
+
+        // 切换到登录标签页
+        function switchToLoginTab() {
+            // 隐藏所有标签页
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 移除所有导航标签的active类
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示登录标签页
+            const loginTabContent = document.getElementById('login');
+            loginTabContent.classList.add('active');
+            
+            // 设置登录导航标签为active
+            const loginNavTab = document.querySelector('.nav-tab[data-tab="login"]');
+            loginNavTab.classList.add('active');
         }
 
         // 渲染异常数据
@@ -2250,6 +2388,240 @@
             loadRegions();
             loadSensors();
             loadEnvironmentalData();
+        });
+
+        // 登录和注册功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 登录表单事件监听
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleLogin();
+                });
+            }
+            
+            // 注册表单事件监听
+            const registerForm = document.getElementById('register-form');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleRegister();
+                });
+            }
+        });
+
+        // 切换登录/注册标签
+        function switchAuthTab(tabName) {
+            // 切换标签按钮样式
+            document.querySelectorAll('.auth-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.color = '#666';
+                btn.style.borderBottom = 'none';
+            });
+            
+            document.getElementById(tabName + '-tab-btn').classList.add('active');
+            document.getElementById(tabName + '-tab-btn').style.color = '#3498db';
+            document.getElementById(tabName + '-tab-btn').style.borderBottom = '2px solid #3498db';
+            
+            // 切换表单显示
+            document.getElementById('login-form-container').style.display = tabName === 'login' ? 'block' : 'none';
+            document.getElementById('register-form-container').style.display = tabName === 'register' ? 'block' : 'none';
+        }
+
+        // 处理登录
+        function handleLogin() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const role = document.getElementById('login-role').value;
+            
+            const loginStatus = document.getElementById('login-status');
+            loginStatus.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> 登录中...</div>';
+
+            fetch(`${API_BASE_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    role: role
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loginStatus.innerHTML = '<div class="alert alert-success">登录成功！欢迎 ' + username + '</div>';
+                    // 保存登录状态到本地存储
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('role', role);
+                    
+                    // 更新UI显示用户信息和注销按钮
+                    checkCurrentUser();
+                    
+                    // 刷新页面
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    loginStatus.innerHTML = '<div class="alert alert-error">' + data.error + '</div>';
+                }
+            })
+            .catch(error => {
+                loginStatus.innerHTML = '<div class="alert alert-error">登录失败：' + error.message + '</div>';
+            });
+        }
+
+        // 处理注册
+        function handleRegister() {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            const role = document.getElementById('register-role').value;
+            const email = document.getElementById('register-email').value;
+            const phone = document.getElementById('register-phone').value;
+            
+            const registerStatus = document.getElementById('register-status');
+            
+            // 验证密码是否一致
+            if (password !== confirmPassword) {
+                registerStatus.innerHTML = '<div class="alert alert-error">密码和确认密码不一致</div>';
+                return;
+            }
+            
+            // 验证密码长度
+            if (password.length < 6) {
+                registerStatus.innerHTML = '<div class="alert alert-error">密码长度不能少于6位</div>';
+                return;
+            }
+            
+            registerStatus.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i> 注册中...</div>';
+
+            fetch(`${API_BASE_URL}/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    role: role,
+                    email: email,
+                    phone: phone
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    registerStatus.innerHTML = '<div class="alert alert-success">注册成功！请登录</div>';
+                    // 切换回登录表单
+                    setTimeout(() => {
+                        switchAuthTab('login');
+                        // 清空注册表单
+                        document.getElementById('register-form').reset();
+                    }, 1500);
+                } else {
+                    registerStatus.innerHTML = '<div class="alert alert-error">' + data.error + '</div>';
+                }
+            })
+            .catch(error => {
+                registerStatus.innerHTML = '<div class="alert alert-error">注册失败：' + error.message + '</div>';
+            });
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            return localStorage.getItem('isLoggedIn') === 'true';
+        }
+
+        // 检查当前用户状态并显示相关信息
+        function checkCurrentUser() {
+            const userInfoElement = document.getElementById('user-info');
+            const logoutBtnElement = document.getElementById('logout-btn');
+            const loginTabElement = document.querySelector('.nav-tab[data-tab="login"]');
+            const loginTabContentElement = document.getElementById('login');
+            
+            if (checkLoginStatus()) {
+                const username = localStorage.getItem('username');
+                const role = localStorage.getItem('role');
+                userInfoElement.innerHTML = `欢迎, ${username} (${role})`;
+                userInfoElement.style.display = 'inline';
+                logoutBtnElement.style.display = 'inline-block';
+                
+                // 隐藏登录标签和登录标签页
+                if (loginTabElement) {
+                    loginTabElement.style.display = 'none';
+                }
+                if (loginTabContentElement) {
+                    loginTabContentElement.style.display = 'none';
+                }
+                
+                // 如果当前显示的是登录标签页，切换到实时数据标签页
+                if (loginTabContentElement && loginTabContentElement.classList.contains('active')) {
+                    switchTab('realtime');
+                }
+            } else {
+                userInfoElement.style.display = 'none';
+                logoutBtnElement.style.display = 'none';
+                
+                // 显示登录标签
+                if (loginTabElement) {
+                    loginTabElement.style.display = 'block';
+                }
+            }
+        }
+
+        // 处理注销
+        function handleLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                fetch(`${API_BASE_URL}/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 清除本地存储中的登录状态
+                        localStorage.removeItem('isLoggedIn');
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('role');
+                        
+                        // 更新UI
+                        checkCurrentUser();
+                        showAlert('注销成功', 'success');
+                        
+                        // 刷新页面
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(`注销失败: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    // 即使API调用失败，也要清除本地状态
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('role');
+                    checkCurrentUser();
+                    showAlert('注销失败: 网络错误', 'error');
+                });
+            }
+        }
+
+        // 页面加载完成后检查用户状态
+        document.addEventListener('DOMContentLoaded', function() {
+            checkCurrentUser();
+            
+            // 添加注销按钮事件监听
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', handleLogout);
+            }
         });
     </script>
 </body>
