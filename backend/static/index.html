@@ -1,0 +1,3797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧林草系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .nav {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            border-right: 1px solid #e9ecef;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+
+        .nav-item:hover {
+            background: #e9ecef;
+        }
+
+        .nav-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .content {
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-header h2 {
+            color: #667eea;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        /* 下拉菜单样式 */
+        #user-menu {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 120px;
+            box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+
+        .dropdown-content div {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+        }
+
+        .dropdown-content div:hover {
+            background-color: #f1f1f1;
+        }
+
+        #user-menu:hover .dropdown-content {
+            display: block;
+        }
+
+        /* 实时监测样式 */
+        .monitoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .monitoring-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .monitoring-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+
+        .monitoring-card h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .metric-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 预警通知记录样式 */
+        .alert-record {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ffc107;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .alert-record.warning {
+            border-left-color: #ffc107;
+        }
+
+        .alert-record.danger {
+            border-left-color: #dc3545;
+        }
+
+        .alert-record.info {
+            border-left-color: #17a2b8;
+        }
+
+        .alert-record .alert-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .alert-record .alert-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 资源变动记录样式 */
+        .change-record {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .change-record .change-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .change-record .change-type.new {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .change-record .change-type.remove {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .change-record .change-type.update {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* 设备状态和维护记录样式 */
+        .status-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .status-card .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-card .status-indicator.online {
+            background: #28a745;
+        }
+
+        .status-card .status-indicator.offline {
+            background: #dc3545;
+        }
+
+        .status-card .status-indicator.warning {
+            background: #ffc107;
+        }
+
+        .maintenance-record {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #17a2b8;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 预警管理选项卡样式 */
+        .alert-tabs {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        /* 资源管理选项卡样式 */
+        .resource-tabs {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .alert-tab-content, .resource-tab-content, .device-tab-content {
+            display: none;
+        }
+
+        .alert-tab-content.active, .resource-tab-content.active, .device-tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+            }
+
+            .nav-item {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+
+            .toolbar {
+                flex-direction: column;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌲 智慧林草系统</h1>
+            <p>智能环境监测与资源管理平台</p>
+        </div>
+
+        <div class="nav">
+            <div class="nav-item active" onclick="showSection('regions')">区域管理</div>
+            <div class="nav-item" onclick="showSection('monitoring')">实时监测</div>
+            <div class="nav-item" onclick="showSection('sensors')">传感器管理</div>
+            <div class="nav-item" onclick="showSection('alerts')">预警管理</div>
+            <div class="nav-item" onclick="showSection('resources')">资源管理</div>
+            <div class="nav-item" onclick="showSection('devices')">设备管理</div>
+            <div class="nav-item" onclick="showSection('reports')">报表管理</div>
+            <div class="nav-item" onclick="showSection('statistics')">统计分析</div>
+            <div class="nav-item" id="user-menu">
+                <span id="user-menu-content">登录/注册</span>
+                <div id="user-dropdown" class="dropdown-content">
+                    <div onclick="openLoginModal()">登录</div>
+                    <div onclick="openRegisterModal()">注册</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- 实时监测 -->
+            <div id="monitoring" class="section">
+                <div class="toolbar">
+                    <h2>实时监测数据</h2>
+                    <div class="search-form">
+                        <select id="monitoring-region" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <option value="">所有区域</option>
+                        </select>
+                        <select id="monitoring-metric" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <option value="">所有指标</option>
+                            <option value="temperature">温度</option>
+                            <option value="humidity">湿度</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadMonitoringData()">刷新数据</button>
+                    </div>
+                </div>
+                <div id="monitoring-alert"></div>
+                <div id="monitoring-content">
+                    <div class="monitoring-grid">
+                        <div class="monitoring-card">
+                            <h3>温度</h3>
+                            <div class="metric-value">--°C</div>
+                            <div class="metric-time">最后更新: --</div>
+                        </div>
+                        <div class="monitoring-card">
+                            <h3>湿度</h3>
+                            <div class="metric-value">--%</div>
+                            <div class="metric-time">最后更新: --</div>
+                        </div>
+                        <div class="monitoring-card" style="display: none;">
+                            <h3>风速</h3>
+                            <div class="metric-value">--m/s</div>
+                            <div class="metric-time">最后更新: --</div>
+                        </div>
+                        <div class="monitoring-card" style="display: none;">
+                            <h3>降雨量</h3>
+                            <div class="metric-value">--mm</div>
+                            <div class="metric-time">最后更新: --</div>
+                        </div>
+                        <div class="monitoring-card" style="display: none;">
+                            <h3>土壤温度</h3>
+                            <div class="metric-value">--°C</div>
+                            <div class="metric-time">最后更新: --</div>
+                        </div>
+                        <div class="monitoring-card" style="display: none;">
+                            <h3>土壤湿度</h3>
+                            <div class="metric-value">--%</div>
+                            <div class="metric-time">最后更新: --</div>
+                        </div>
+                        <div class="monitoring-card" style="display: none;">
+                            <h3>PM2.5</h3>
+                            <div class="metric-value">--μg/m³</div>
+                            <div class="metric-time">最后更新: --</div>
+                        </div>
+                        <div class="monitoring-card" style="display: none;">
+                            <h3>PM10</h3>
+                            <div class="metric-value">--μg/m³</div>
+                            <div class="metric-time">最后更新: --</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 区域管理 -->
+            <div id="regions" class="section active">
+                <div class="toolbar">
+                    <h2>区域管理</h2>
+                    <div class="search-form">
+                        <input type="text" id="regions-search-name" placeholder="区域名称" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                        <select id="regions-search-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <option value="">所有类型</option>
+                            <option value="FOREST">森林</option>
+                            <option value="GRASSLAND">草地</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="searchRegions()">查询</button>
+                        <button class="btn btn-secondary" onclick="resetRegionsSearch()">重置</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('region')">+ 新增区域</button>
+                </div>
+                <div id="regions-alert"></div>
+                <div id="regions-content"></div>
+            </div>
+
+            <!-- 传感器管理 -->
+            <div id="sensors" class="section">
+                <div class="toolbar">
+                    <h2>传感器管理</h2>
+                    <div class="search-form">
+                        <input type="text" id="sensors-search-id" placeholder="传感器ID" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                        <select id="sensors-search-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <option value="">所有类型</option>
+                            <option value="TEMPERATURE">温度</option>
+                            <option value="HUMIDITY">湿度</option>
+                            <option value="IMAGE">图像</option>
+                            <option value="OTHER">其他</option>
+                        </select>
+                        <select id="sensors-search-status" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <option value="">所有状态</option>
+                            <option value="ACTIVE">激活</option>
+                            <option value="INACTIVE">未激活</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="searchSensors()">查询</button>
+                        <button class="btn btn-secondary" onclick="resetSensorsSearch()">重置</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('sensor')">+ 新增传感器</button>
+                </div>
+                <div id="sensors-alert"></div>
+                <div id="sensors-content"></div>
+            </div>
+
+            <!-- 预警管理 -->
+            <div id="alerts" class="section">
+                <div class="toolbar">
+                    <h2>预警管理</h2>
+                    <div class="alert-tabs">
+                        <button class="tab-btn active" onclick="switchAlertTab('alerts')">预警列表</button>
+                        <button class="tab-btn" onclick="switchAlertTab('notifications')">通知记录</button>
+                    </div>
+                </div>
+
+                <!-- 预警列表 -->
+                <div id="alerts-list" class="alert-tab-content active">
+                    <div class="toolbar" style="border-top: 1px solid #e9ecef; padding-top: 20px;">
+                        <div class="search-form">
+                            <select id="alerts-search-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有类型</option>
+                                <option value="FIRE">火灾</option>
+                                <option value="DROUGHT">干旱</option>
+                                <option value="PEST">虫害</option>
+                                <option value="OTHER">其他</option>
+                            </select>
+                            <select id="alerts-search-severity" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有严重程度</option>
+                                <option value="GENERAL">一般</option>
+                                <option value="MODERATE">中等</option>
+                                <option value="SEVERE">严重</option>
+                                <option value="CRITICAL">紧急</option>
+                            </select>
+                            <select id="alerts-search-status" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有状态</option>
+                                <option value="PENDING">待处理</option>
+                                <option value="PROCESSING">处理中</option>
+                                <option value="CLOSED">已关闭</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="searchAlerts()">查询</button>
+                            <button class="btn btn-secondary" onclick="resetAlertsSearch()">重置</button>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-primary" onclick="openModal('alert-rule')">+ 新增预警规则</button>
+                            <button class="btn btn-success" onclick="openModal('alert')">+ 新增预警</button>
+                        </div>
+                    </div>
+                    <div id="alerts-alert"></div>
+                    <div id="alerts-content"></div>
+                </div>
+
+                <!-- 通知记录 -->
+                <div id="notifications-list" class="alert-tab-content">
+                    <div class="toolbar" style="border-top: 1px solid #e9ecef; padding-top: 20px;">
+                        <div class="search-form">
+                            <select id="notifications-search-alert-id" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有预警</option>
+                            </select>
+                            <input type="date" id="notifications-search-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;" placeholder="选择日期">
+                            <button class="btn btn-primary" onclick="loadNotifications()">查询</button>
+                            <button class="btn btn-secondary" onclick="resetNotificationsSearch()">重置</button>
+                        </div>
+                    </div>
+                    <div id="notifications-alert"></div>
+                    <div id="notifications-content"></div>
+                </div>
+            </div>
+
+            <!-- 资源管理 -->
+            <div id="resources" class="section">
+                <div class="toolbar">
+                    <h2>资源管理</h2>
+                    <div class="resource-tabs">
+                        <button class="tab-btn active" onclick="switchResourceTab('resources')">资源列表</button>
+                        <button class="tab-btn" onclick="switchResourceTab('changes')">变动记录</button>
+                    </div>
+                </div>
+
+                <!-- 资源列表 -->
+                <div id="resources-list" class="resource-tab-content active">
+                    <div class="toolbar" style="border-top: 1px solid #e9ecef; padding-top: 20px;">
+                        <div class="search-form">
+                            <select id="resources-search-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有类型</option>
+                                <option value="TREE">树木</option>
+                                <option value="GRASS">草地</option>
+                            </select>
+                            <select id="resources-search-stage" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有生长阶段</option>
+                                <option value="SEEDLING">幼苗</option>
+                                <option value="GROWING">成长期</option>
+                                <option value="MATURE">成熟期</option>
+                            </select>
+                            <input type="number" id="resources-search-region-id" placeholder="区域ID" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <button class="btn btn-primary" onclick="searchResources()">查询</button>
+                            <button class="btn btn-secondary" onclick="resetResourcesSearch()">重置</button>
+                        </div>
+                        <button class="btn btn-primary" onclick="openModal('resource')">+ 新增资源</button>
+                    </div>
+                    <div id="resources-alert"></div>
+                    <div id="resources-content"></div>
+                </div>
+
+                <!-- 变动记录 -->
+                <div id="changes-list" class="resource-tab-content">
+                    <div class="toolbar" style="border-top: 1px solid #e9ecef; padding-top: 20px;">
+                        <div class="search-form">
+                            <input type="text" id="changes-search-resource-id" placeholder="资源ID" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <select id="changes-search-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有变动类型</option>
+                                <option value="NEW">新增</option>
+                                <option value="REDUCE">减少</option>
+                                <option value="UPDATE">状态更新</option>
+                            </select>
+                            <input type="date" id="changes-search-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <button class="btn btn-primary" onclick="loadResourceChanges()">查询</button>
+                            <button class="btn btn-secondary" onclick="resetChangesSearch()">重置</button>
+                        </div>
+                    </div>
+                    <div id="changes-alert"></div>
+                    <div id="changes-content"></div>
+                </div>
+            </div>
+
+            <!-- 设备管理 -->
+            <div id="devices" class="section">
+                <div class="toolbar">
+                    <h2>设备管理</h2>
+                    <div class="device-tabs">
+                        <button class="tab-btn active" onclick="switchDeviceTab('devices')">设备列表</button>
+                        <button class="tab-btn" onclick="switchDeviceTab('status')">设备状态</button>
+                        <button class="tab-btn" onclick="switchDeviceTab('maintenance')">维护记录</button>
+                    </div>
+                </div>
+
+                <!-- 设备列表 -->
+                <div id="devices-list" class="device-tab-content active">
+                    <div class="toolbar" style="border-top: 1px solid #e9ecef; padding-top: 20px;">
+                        <div class="search-form">
+                            <select id="devices-search-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有类型</option>
+                                <option value="SENSOR">传感器</option>
+                                <option value="CAMERA">摄像头</option>
+                                <option value="ALERTER">报警器</option>
+                                <option value="OTHER">其他</option>
+                            </select>
+                            <input type="number" id="devices-search-region-id" placeholder="安装区域ID" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <input type="text" id="devices-search-name" placeholder="设备名称" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <button class="btn btn-primary" onclick="searchDevices()">查询</button>
+                            <button class="btn btn-secondary" onclick="resetDevicesSearch()">重置</button>
+                        </div>
+                        <button class="btn btn-primary" onclick="openModal('device')">+ 新增设备</button>
+                    </div>
+                    <div id="devices-alert"></div>
+                    <div id="devices-content"></div>
+                </div>
+
+                <!-- 设备状态 -->
+                <div id="status-list" class="device-tab-content">
+                    <div class="toolbar" style="border-top: 1px solid #e9ecef; padding-top: 20px;">
+                        <div class="search-form">
+                            <input type="text" id="status-search-device-id" placeholder="设备ID" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <select id="status-search-status" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有状态</option>
+                                <option value="ONLINE">在线</option>
+                                <option value="OFFLINE">离线</option>
+                                <option value="WARNING">警告</option>
+                                <option value="ERROR">故障</option>
+                            </select>
+                            <input type="date" id="status-search-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <button class="btn btn-primary" onclick="loadDeviceStatus()">查询</button>
+                            <button class="btn btn-secondary" onclick="resetStatusSearch()">重置</button>
+                        </div>
+                        <button class="btn btn-success" onclick="openModal('device-status')">+ 记录状态</button>
+                    </div>
+                    <div id="status-alert"></div>
+                    <div id="status-content"></div>
+                </div>
+
+                <!-- 维护记录 -->
+                <div id="maintenance-list" class="device-tab-content">
+                    <div class="toolbar" style="border-top: 1px solid #e9ecef; padding-top: 20px;">
+                        <div class="search-form">
+                            <input type="text" id="maintenance-search-device-id" placeholder="设备ID" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <select id="maintenance-search-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                                <option value="">所有类型</option>
+                                <option value="REPAIR">维修</option>
+                                <option value="REPLACE">更换</option>
+                                <option value="INSPECTION">检查</option>
+                                <option value="UPGRADE">升级</option>
+                                <option value="OTHER">其他</option>
+                            </select>
+                            <input type="date" id="maintenance-search-date" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <button class="btn btn-primary" onclick="loadDeviceMaintenance()">查询</button>
+                            <button class="btn btn-secondary" onclick="resetMaintenanceSearch()">重置</button>
+                        </div>
+                    </div>
+                    <div id="maintenance-alert"></div>
+                    <div id="maintenance-content"></div>
+                </div>
+            </div>
+
+            <!-- 报表管理 -->
+            <div id="reports" class="section">
+                <div class="toolbar">
+                    <h2>报表管理</h2>
+                    <div class="search-form">
+                        <select id="reports-search-type" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <option value="">所有类型</option>
+                            <option value="daily">日报</option>
+                            <option value="weekly">周报</option>
+                            <option value="monthly">月报</option>
+                            <option value="quarterly">季报</option>
+                            <option value="yearly">年报</option>
+                        </select>
+                        <input type="number" id="reports-search-template-id" placeholder="模板ID" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                        <select id="reports-search-status" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-right: 10px;">
+                            <option value="">所有状态</option>
+                            <option value="GENERATED">已生成</option>
+                            <option value="PROCESSING">生成中</option>
+                            <option value="FAILED">生成失败</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="searchReports()">查询</button>
+                        <button class="btn btn-secondary" onclick="resetReportsSearch()">重置</button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-primary" onclick="openModal('report-template')">+ 新增模板</button>
+                        <button class="btn btn-success" onclick="openModal('report')">+ 新增报表</button>
+                        <button class="btn btn-warning" onclick="openModal('generate-report')">生成报表</button>
+                    </div>
+                </div>
+                <div id="reports-alert"></div>
+                <div id="reports-content"></div>
+            </div>
+
+            <!-- 统计分析 -->
+            <div id="statistics" class="section">
+                <div class="toolbar">
+                    <h2>统计分析</h2>
+                    <button class="btn btn-primary" onclick="loadStatistics()">刷新数据</button>
+                </div>
+                <div id="statistics-alert"></div>
+                <div id="statistics-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">标题</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let currentSection = 'regions';
+        let currentEditId = null;
+        let token = localStorage.getItem('token');
+        let user = JSON.parse(localStorage.getItem('user'));
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化页面
+            initializeApp();
+        });
+
+        // 初始化应用
+        function initializeApp() {
+            // 加载当前区域的数据
+            loadSectionData(currentSection);
+            
+            // 检查登录状态
+            checkLoginStatus();
+            
+            // 根据登录状态控制新增按钮的显示
+            updateToolbarButtons();
+        }
+        
+        // 根据登录状态控制工具栏按钮的显示
+        function updateToolbarButtons() {
+            // 获取所有工具栏中的按钮
+            const buttons = document.querySelectorAll('.toolbar button');
+            buttons.forEach(button => {
+                // 如果按钮文本包含"新增"、"编辑"、"删除"、"保存"、"生成"等操作词汇，则根据登录状态控制显示
+                if (button.textContent.includes('新增') || button.textContent.includes('编辑') || button.textContent.includes('删除') || button.textContent.includes('保存') || button.textContent.includes('生成')) {
+                    if (token) {
+                        button.style.display = 'inline-block';
+                    } else {
+                        button.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            if (token) {
+                // 显示用户信息
+                showUserInfo();
+            } else {
+                // 显示登录/注册按钮
+                showLoginButtons();
+            }
+        }
+
+        // 显示用户信息
+        function showUserInfo() {
+            const userMenu = document.getElementById('user-menu');
+            const userMenuContent = document.getElementById('user-menu-content');
+            const userDropdown = document.getElementById('user-dropdown');
+            
+            // 更新用户菜单内容
+            userMenuContent.innerHTML = user ? `欢迎, ${user.real_name || user.username}` : '欢迎回来';
+            
+            // 更新下拉菜单内容，显示退出登录选项
+            userDropdown.innerHTML = `
+                <div onclick="logout()">退出登录</div>
+            `;
+        }
+
+        // 显示登录/注册按钮
+        function showLoginButtons() {
+            const userMenu = document.getElementById('user-menu');
+            const userMenuContent = document.getElementById('user-menu-content');
+            const userDropdown = document.getElementById('user-dropdown');
+            
+            // 更新用户菜单内容
+            userMenuContent.innerHTML = '登录/注册';
+            
+            // 更新下拉菜单内容，显示登录和注册选项
+            userDropdown.innerHTML = `
+                <div onclick="openLoginModal()">登录</div>
+                <div onclick="openRegisterModal()">注册</div>
+            `;
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            token = null;
+            user = null;
+            // 重新加载页面，确保所有状态重置
+            location.reload();
+        }
+
+        // 显示指定部分
+        function showSection(section) {
+            currentSection = section;
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(section).classList.add('active');
+            
+            // 加载数据
+            loadSectionData(section);
+            
+            // 根据登录状态控制新增按钮的显示
+            updateToolbarButtons();
+        }
+
+        // 加载各部分数据
+        function loadSectionData(section) {
+            switch(section) {
+                case 'regions': loadRegions(); break;
+                case 'monitoring': loadMonitoringData(); break;
+                case 'sensors': loadSensors(); break;
+                case 'alerts': loadAlertsAndNotifications(); break;
+                case 'resources': loadResources(); break;
+                case 'devices': loadDevices(); break;
+                case 'reports': loadReports(); break;
+                case 'statistics': loadStatistics(); break;
+            }
+        }
+
+        // API请求封装
+        async function apiRequest(method, url, data = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : '',
+                }
+            };
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+            const response = await fetch(API_BASE + url, options);
+            
+            // 检查响应状态
+            if (!response.ok) {
+                // 处理认证和权限错误
+                if (response.status === 401) {
+                    // 401: 未认证，需要重新登录
+                    // 清除本地存储的token和用户信息
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    token = null;
+                    user = null;
+
+                    // 更新UI，显示登录/注册按钮
+                    showLoginButtons();
+
+                    // 显示重新登录提示
+                    showAlert('登录已过期，请重新登录', 'error');
+
+                    // 跳转到登录页面或显示登录模态框
+                    openLoginModal();
+
+                    throw new Error('需要登录');
+                } else if (response.status === 403) {
+                    // 403: 权限不足，无需重新登录
+                    const errorData = await response.json().catch(() => ({}));
+                    showAlert(errorData.error || '没有操作权限', 'error');
+                    throw new Error('权限不足');
+                }
+                
+                const errorData = await response.json().catch(() => ({}));
+                const errorMsg = errorData.error || `请求失败: ${response.status} ${response.statusText}`;
+                throw new Error(errorMsg);
+            }
+            
+            return await response.json();
+        }
+
+        // 登录功能
+        function openLoginModal() {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            
+            title.textContent = '登录';
+            body.innerHTML = `
+                <form onsubmit="login(event)">
+                    <div class="form-group">
+                        <label>用户名 *</label>
+                        <input type="text" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>密码 *</label>
+                        <input type="password" name="password" required>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">登录</button>
+                    </div>
+                </form>
+            `;
+            modal.style.display = 'block';
+        }
+
+        // 登录处理
+        async function login(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                username: formData.get('username'),
+                password: formData.get('password'),
+            };
+            
+            try {
+                const result = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!result.ok) {
+                    const errorData = await result.json().catch(() => ({}));
+                    throw new Error(errorData.error || '登录失败');
+                }
+                
+                const loginResult = await result.json();
+                token = loginResult.token;
+                user = {
+                    id: loginResult.user_id,
+                    username: loginResult.username,
+                    real_name: loginResult.real_name
+                };
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(user));
+                
+                showAlert('登录成功！', 'success');
+                closeModal();
+                
+                // 更新UI，显示用户信息
+                checkLoginStatus();
+                
+                // 显示所有操作按钮
+                updateToolbarButtons();
+                
+                // 重新加载当前区域的数据
+                loadSectionData(currentSection);
+            } catch (error) {
+                showAlert(`登录失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 注册功能
+        function openRegisterModal() {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+
+            title.textContent = '注册';
+            body.innerHTML = `
+                <form onsubmit="register(event)">
+                    <div class="form-group">
+                        <label>用户名 *</label>
+                        <input type="text" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>密码 *</label>
+                        <input type="password" name="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>确认密码 *</label>
+                        <input type="password" name="confirm_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱 *</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>真实姓名</label>
+                        <input type="text" name="real_name">
+                    </div>
+                    <div class="form-group">
+                        <label>注册身份 *</label>
+                        <select name="role_id" id="role-select" required>
+                            <option value="">请选择身份</option>
+                        </select>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">注册</button>
+                    </div>
+                </form>
+            `;
+
+            // 加载角色列表
+            loadRolesForRegistration();
+
+            modal.style.display = 'block';
+        }
+
+        // 加载角色列表用于注册
+        async function loadRolesForRegistration() {
+            try {
+                const response = await fetch('/roles');
+                if (!response.ok) {
+                    throw new Error('获取角色列表失败');
+                }
+
+                const data = await response.json();
+                const roleSelect = document.getElementById('role-select');
+
+                // 清空现有选项（保留默认选项）
+                roleSelect.innerHTML = '<option value="">请选择身份</option>';
+
+                // 添加角色选项
+                data.roles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.ID || role.id;
+                    option.textContent = `${role.RoleName || role.role_name} - ${role.Description || role.description}`;
+                    roleSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('加载角色列表失败:', error);
+                const roleSelect = document.getElementById('role-select');
+                roleSelect.innerHTML = '<option value="">加载失败，请刷新页面</option>';
+            }
+        }
+
+        // 注册处理
+        async function register(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            if (formData.get('password') !== formData.get('confirm_password')) {
+                showAlert('密码不一致！', 'error');
+                return;
+            }
+            
+            const data = {
+                username: formData.get('username'),
+                password: formData.get('password'),
+                email: formData.get('email'),
+                real_name: formData.get('real_name'),
+                phone: formData.get('phone') || '',
+                role_id: parseInt(formData.get('role_id')),
+            };
+            
+            try {
+                const result = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!result.ok) {
+                    const errorData = await result.json().catch(() => ({}));
+                    throw new Error(errorData.error || '注册失败');
+                }
+                
+                showAlert('注册成功！请登录', 'success');
+                closeModal();
+                openLoginModal();
+            } catch (error) {
+                showAlert('注册失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示提示信息
+        function showAlert(message, type = 'success') {
+            let alertDiv;
+            let section = null;
+            
+            // 标准化输入参数
+            if (typeof message === 'object') {
+                // 支持全局提示或特定区域提示
+                section = message.section;
+                message = message.message || '未知消息';
+            } else {
+                // 确保消息是字符串类型
+                message = String(message || '未知消息');
+            }
+            
+            // 确保类型是有效值
+            const validTypes = ['success', 'error', 'warning', 'info'];
+            type = validTypes.includes(type) ? type : 'success';
+            
+            // 查找或创建提示容器
+            if (section) {
+                alertDiv = document.getElementById(section + '-alert');
+            } else {
+                alertDiv = document.getElementById(currentSection + '-alert') || 
+                          document.getElementById('global-alert');
+            }
+            
+            // 如果提示容器不存在，创建全局提示
+            if (!alertDiv) {
+                alertDiv = document.createElement('div');
+                alertDiv.id = section ? section + '-alert' : 'global-alert';
+                
+                if (section) {
+                    // 区域提示样式
+                    alertDiv.style.marginBottom = '15px';
+                } else {
+                    // 全局提示样式
+                    alertDiv.style.position = 'fixed';
+                    alertDiv.style.top = '20px';
+                    alertDiv.style.right = '20px';
+                    alertDiv.style.zIndex = '1000';
+                    alertDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                    alertDiv.style.fontWeight = '500';
+                    alertDiv.style.color = 'white';
+                    document.body.appendChild(alertDiv);
+                }
+            }
+            
+            // 设置样式和内容
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertDiv.style.display = 'block';
+            alertDiv.style.padding = '15px 20px';
+            alertDiv.style.borderRadius = '6px';
+            
+            // 自动隐藏
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // 区域管理
+        async function loadRegions(searchParams = {}) {
+            const content = document.getElementById('regions-content');
+            const alertDiv = document.getElementById('regions-alert');
+            
+            // 显示加载状态
+            content.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                // 清空之前的提示
+                if (alertDiv) {
+                    alertDiv.innerHTML = '';
+                }
+                
+                // 构建查询参数
+                let queryString = '';
+                const params = [];
+                if (searchParams.name && searchParams.name.trim() !== '') params.push(`region_name=${encodeURIComponent(searchParams.name)}`);
+                if (searchParams.type && searchParams.type !== '所有类型') params.push(`region_type=${encodeURIComponent(searchParams.type)}`);
+                if (params.length > 0) queryString = '?' + params.join('&');
+                
+                const result = await apiRequest('GET', `/api/regions${queryString}`);
+                
+                // 检查响应数据格式
+                const regions = result.data || result;
+                
+                if (Array.isArray(regions) && regions.length > 0) {
+                    let html = '<table><thead><tr><th>ID</th><th>名称</th><th>类型</th><th>纬度</th><th>经度</th><th>负责人ID</th><th>操作</th></tr></thead><tbody>';
+                    regions.forEach(region => {
+                        const regionId = region.ID || region.id;
+                        const managerId = region.ManagerID !== undefined ? region.ManagerID : (region.manager_id !== undefined ? region.manager_id : '-');
+                        const regionType = region.Type || region.type;
+                        const regionName = region.Name || region.name;
+                        const latitude = region.Latitude || region.latitude || '-';
+                        const longitude = region.Longitude || region.longitude || '-';
+                        
+                        html += `<tr>
+                            <td>${regionId}</td>
+                            <td>${regionName}</td>
+                            <td>${regionType === 'FOREST' ? '森林' : '草地'}</td>
+                            <td>${latitude}</td>
+                            <td>${longitude}</td>
+                            <td>${managerId}</td>
+                            <td>`;
+                        if (token) {
+                            html += `<button class="btn btn-secondary" onclick="editRegion(${regionId})">编辑</button>
+                                <button class="btn btn-danger" onclick="deleteRegion(${regionId})">删除</button>`;
+                        } else {
+                            html += '<span>无权限操作</span>';
+                        }
+                        html += `</td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
+                }
+
+                // 更新监控区域下拉框
+                updateMonitoringRegions(regions);
+            } catch (error) {
+                // 显示错误信息
+                const errorMsg = `加载区域数据失败: ${error.message}`;
+                content.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+
+                // 使用showAlert显示错误
+                showAlert(errorMsg, 'error');
+            }
+        }
+
+        // 区域搜索功能
+        function searchRegions() {
+            const name = document.getElementById('regions-search-name').value;
+            const type = document.getElementById('regions-search-type').value;
+            loadRegions({ name, type });
+        }
+
+        // 重置区域搜索
+        function resetRegionsSearch() {
+            document.getElementById('regions-search-name').value = '';
+            document.getElementById('regions-search-type').value = '';
+            loadRegions();
+        }
+
+        // 更新监控区域下拉框
+        function updateMonitoringRegions(regions) {
+            const monitoringRegionSelect = document.getElementById('monitoring-region');
+            if (!monitoringRegionSelect) return;
+
+            // 清空现有选项，保留"所有区域"
+            monitoringRegionSelect.innerHTML = '<option value="">所有区域</option>';
+
+            // 添加区域选项
+            if (Array.isArray(regions)) {
+                regions.forEach(region => {
+                    const regionId = region.ID || region.id;
+                    const regionName = region.Name || region.name;
+                    const option = document.createElement('option');
+                    option.value = regionId;
+                    option.textContent = regionName;
+                    monitoringRegionSelect.appendChild(option);
+                });
+            }
+        }
+
+        // 切换预警管理选项卡
+        function switchAlertTab(tab) {
+            // 切换按钮状态
+            document.querySelectorAll('#alerts .tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 切换内容显示
+            document.querySelectorAll('#alerts .alert-tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + '-list').classList.add('active');
+
+            // 加载对应数据
+            if (tab === 'alerts') {
+                loadAlerts();
+            } else if (tab === 'notifications') {
+                loadNotifications();
+            }
+        }
+
+        // 切换资源管理选项卡
+        function switchResourceTab(tab) {
+            // 切换按钮状态
+            document.querySelectorAll('#resources .tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 切换内容显示
+            document.querySelectorAll('#resources .resource-tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + '-list').classList.add('active');
+
+            // 加载对应数据
+            if (tab === 'resources') {
+                loadResources();
+            } else if (tab === 'changes') {
+                loadResourceChanges();
+            }
+        }
+
+        // 切换设备管理选项卡
+        function switchDeviceTab(tab) {
+            // 切换按钮状态
+            document.querySelectorAll('#devices .tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 切换内容显示
+            document.querySelectorAll('#devices .device-tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + '-list').classList.add('active');
+
+            // 加载对应数据
+            if (tab === 'devices') {
+                loadDevices();
+            } else if (tab === 'status') {
+                loadDeviceStatus();
+            } else if (tab === 'maintenance') {
+                loadDeviceMaintenance();
+            }
+        }
+
+        // 加载预警和通知数据
+        async function loadAlertsAndNotifications() {
+            // 默认显示预警列表
+            loadAlerts();
+            // 同时准备通知记录的预警下拉框
+            loadAlertsForNotificationsSelect();
+        }
+
+        // 为通知记录加载预警选择下拉框
+        async function loadAlertsForNotificationsSelect() {
+            try {
+                const result = await apiRequest('GET', '/api/alerts');
+                const alerts = result.data || [];
+                const select = document.getElementById('notifications-search-alert-id');
+
+                // 清空现有选项
+                select.innerHTML = '<option value="">所有预警</option>';
+
+                // 添加预警选项
+                if (Array.isArray(alerts)) {
+                    alerts.forEach(alert => {
+                        const alertId = alert.ID || alert.id;
+                        const alertType = alert.AlertType || alert.alert_type;
+                        const severity = alert.Severity || alert.severity;
+                        const option = document.createElement('option');
+                        option.value = alertId;
+                        option.textContent = `预警${alertId} (${alertType})`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.warn('加载预警列表失败:', error);
+            }
+        }
+
+        // 加载通知记录
+        async function loadNotifications() {
+            const content = document.getElementById('notifications-content');
+            const alertId = document.getElementById('notifications-search-alert-id').value;
+            const date = document.getElementById('notifications-search-date').value;
+
+            content.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                let allNotifications = [];
+
+                // 首先获取所有预警信息，用于关联
+                const alertsResult = await apiRequest('GET', '/api/alerts');
+                const alerts = alertsResult.data || [];
+                const alertMap = {};
+                alerts.forEach(alert => {
+                    const alertIdCurrent = alert.ID || alert.id;
+                    alertMap[alertIdCurrent] = {
+                        type: alert.AlertType || alert.alert_type,
+                        severity: alert.Severity || alert.severity
+                    };
+                });
+
+                if (alertId) {
+                    // 如果指定了预警ID，直接获取该预警的通知
+                    try {
+                        const notificationsResult = await apiRequest('GET', `/api/alerts/${alertId}/notifications`);
+                        const notifications = notificationsResult.data || [];
+                        const alertInfo = alertMap[alertId] || {};
+                        notifications.forEach(notification => {
+                            allNotifications.push({
+                                ...notification,
+                                alert_type: alertInfo.type,
+                                alert_severity: alertInfo.severity
+                            });
+                        });
+                    } catch (error) {
+                        console.warn(`获取预警 ${alertId} 的通知失败:`, error);
+                    }
+                } else {
+                    // 如果没有指定预警ID，获取所有预警的通知
+                    for (const alert of alerts) {
+                        const alertIdCurrent = alert.ID || alert.id;
+                        try {
+                            const notificationsResult = await apiRequest('GET', `/api/alerts/${alertIdCurrent}/notifications`);
+                            const notifications = notificationsResult.data || [];
+                            const alertInfo = alertMap[alertIdCurrent] || {};
+                            notifications.forEach(notification => {
+                                allNotifications.push({
+                                    ...notification,
+                                    alert_type: alertInfo.type,
+                                    alert_severity: alertInfo.severity
+                                });
+                            });
+                        } catch (error) {
+                            console.warn(`获取预警 ${alertIdCurrent} 的通知失败:`, error);
+                        }
+                    }
+                }
+
+                // 按日期筛选
+                if (date) {
+                    allNotifications = allNotifications.filter(notification => {
+                        const notificationDate = new Date(notification.created_at || notification.CreatedAt).toISOString().split('T')[0];
+                        return notificationDate === date;
+                    });
+                }
+
+                // 按时间倒序排序
+                allNotifications.sort((a, b) => new Date(b.created_at || b.CreatedAt) - new Date(a.created_at || a.CreatedAt));
+
+                if (allNotifications.length > 0) {
+                    let html = '';
+                    allNotifications.forEach(notification => {
+                        const severity = notification.alert_severity;
+                        const severityClass = getSeverityClass(severity);
+                        const createTime = new Date(notification.created_at).toLocaleString();
+
+                        html += `
+                            <div class="alert-record ${severityClass}">
+                                <div class="alert-title">
+                                    <strong>预警${notification.alert_id} - ${notification.alert_type || '未知类型'}</strong>
+                                    <span style="float: right;">${getSeverityText(severity) || '未知'}</span>
+                                </div>
+                                <div class="alert-content">${notification.message || '无消息内容'}</div>
+                                <div class="alert-time">发送时间: ${createTime}</div>
+                                <div class="alert-meta">
+                                    接收人: ${notification.recipient || '未指定'} |
+                                    通知方式: ${notification.notification_type || '未知'}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="empty-state"><p>暂无通知记录</p></div>';
+                }
+
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-error">加载通知记录失败: ${error.message}</div>`;
+            }
+        }
+
+        // 获取严重程度对应的CSS类
+        function getSeverityClass(severity) {
+            switch (severity) {
+                case 'CRITICAL': return 'danger';
+                case 'SEVERE': return 'danger';
+                case 'MODERATE': return 'warning';
+                case 'GENERAL': return 'info';
+                default: return 'info';
+            }
+        }
+
+        // 获取严重程度的文本
+        function getSeverityText(severity) {
+            switch (severity) {
+                case 'CRITICAL': return '紧急';
+                case 'SEVERE': return '严重';
+                case 'MODERATE': return '中等';
+                case 'GENERAL': return '一般';
+                default: return '未知';
+            }
+        }
+
+        // 重置通知记录搜索
+        function resetNotificationsSearch() {
+            document.getElementById('notifications-search-alert-id').value = '';
+            document.getElementById('notifications-search-date').value = '';
+            loadNotifications();
+        }
+
+        // 加载资源变动记录
+        async function loadResourceChanges() {
+            const content = document.getElementById('changes-content');
+            const resourceId = document.getElementById('changes-search-resource-id').value;
+            const changeType = document.getElementById('changes-search-type').value;
+            const date = document.getElementById('changes-search-date').value;
+
+            content.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                // 获取所有资源，然后获取每个资源的变动记录
+                const resourcesResult = await apiRequest('GET', '/api/resources');
+                const resources = resourcesResult.data || [];
+
+                let allChanges = [];
+
+                // 获取每个资源的变动记录
+                for (const resource of resources) {
+                    const resourceIdCurrent = resource.ID || resource.id;
+                    // 如果指定了资源ID，只获取该资源的变动记录
+                    if (resourceId && resourceId !== resourceIdCurrent.toString()) continue;
+
+                    try {
+                        const changesResult = await apiRequest('GET', `/api/resources/${resourceIdCurrent}/changes`);
+                        const changes = changesResult.data || [];
+                        changes.forEach(change => {
+                            allChanges.push({
+                                ...change,
+                                resource_id: resourceIdCurrent,
+                                resource_type: resource.ResourceType || resource.resource_type,
+                                species_name: resource.SpeciesName || resource.species_name
+                            });
+                        });
+                    } catch (error) {
+                        console.warn(`获取资源 ${resourceIdCurrent} 的变动记录失败:`, error);
+                    }
+                }
+
+                // 按变动类型筛选
+                if (changeType) {
+                    allChanges = allChanges.filter(change => {
+                        const type = change.ChangeType || change.change_type;
+                        return type === changeType;
+                    });
+                }
+
+                // 按日期筛选
+                if (date) {
+                    allChanges = allChanges.filter(change => {
+                        const changeDate = new Date(change.changed_at || change.ChangedAt).toISOString().split('T')[0];
+                        return changeDate === date;
+                    });
+                }
+
+                // 按时间倒序排序
+                allChanges.sort((a, b) => new Date(b.change_time || b.ChangeTime) - new Date(a.change_time || a.ChangeTime));
+
+                if (allChanges.length > 0) {
+                    let html = '';
+                    allChanges.forEach(change => {
+                        const changeType = change.ChangeType || change.change_type;
+                        const changeTime = new Date(change.changed_at || change.ChangedAt).toLocaleString();
+                        const typeClass = getChangeTypeClass(changeType);
+
+                        html += `
+                            <div class="change-record">
+                                <div class="change-type ${typeClass}">${getChangeTypeText(changeType)}</div>
+                                <div class="change-info">
+                                    <strong>资源${change.resource_id} (${change.resource_type} - ${change.species_name})</strong>
+                                </div>
+                                <div class="change-reason">${change.change_reason || change.ChangeReason || '无原因说明'}</div>
+                                <div class="change-time">变动时间: ${changeTime}</div>
+                                <div class="change-details">
+                                    ${change.change_amount ? `变动数量: ${change.change_amount}` : ''}
+                                    ${change.change_area ? `变动面积: ${change.change_area}㎡` : ''}
+                                </div>
+                                <div class="change-operator">操作人: ${change.operator_name || change.OperatorName || '系统'}</div>
+                            </div>
+                        `;
+                    });
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="empty-state"><p>暂无变动记录</p></div>';
+                }
+
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-error">加载变动记录失败: ${error.message}</div>`;
+            }
+        }
+
+        // 获取变动类型对应的CSS类
+        function getChangeTypeClass(changeType) {
+            switch (changeType) {
+                case 'NEW': return 'new';
+                case 'REDUCE': return 'remove';
+                case 'UPDATE': return 'update';
+                default: return 'update';
+            }
+        }
+
+        // 获取变动类型的文本
+        function getChangeTypeText(changeType) {
+            switch (changeType) {
+                case 'ADD': return '新增';
+                case 'REDUCE': return '减少';
+                case 'UPDATE': return '状态更新';
+                default: return '未知';
+            }
+        }
+
+        // 重置变动记录搜索
+        function resetChangesSearch() {
+            document.getElementById('changes-search-resource-id').value = '';
+            document.getElementById('changes-search-type').value = '';
+            document.getElementById('changes-search-date').value = '';
+            loadResourceChanges();
+        }
+
+        // 加载设备状态记录
+        async function loadDeviceStatus() {
+            const content = document.getElementById('status-content');
+            const deviceId = document.getElementById('status-search-device-id').value;
+            const status = document.getElementById('status-search-status').value;
+            const date = document.getElementById('status-search-date').value;
+
+            content.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                // 获取所有设备，然后获取每个设备的状态记录
+                const devicesResult = await apiRequest('GET', '/api/devices');
+                const devices = devicesResult.data || [];
+
+                let allStatusRecords = [];
+
+                // 获取每个设备的状态记录
+                for (const device of devices) {
+                    const deviceIdCurrent = device.ID || device.id;
+                    // 如果指定了设备ID，只获取该设备的状态记录
+                    if (deviceId && deviceId !== deviceIdCurrent.toString()) continue;
+
+                    try {
+                        const statusResult = await apiRequest('GET', `/api/devices/${deviceIdCurrent}/status/logs`);
+                        const statusRecords = statusResult.data || [];
+                        statusRecords.forEach(statusRecord => {
+                            allStatusRecords.push({
+                                ...statusRecord,
+                                device_id: deviceIdCurrent,
+                                device_name: device.Name || device.name,
+                                device_type: device.Type || device.type
+                            });
+                        });
+                    } catch (error) {
+                        console.warn(`获取设备 ${deviceIdCurrent} 的状态记录失败:`, error);
+                    }
+                }
+
+                // 按状态筛选
+                if (status) {
+                    allStatusRecords = allStatusRecords.filter(record => {
+                        const recordStatus = record.status || record.Status;
+                        return recordStatus === status;
+                    });
+                }
+
+                // 按日期筛选
+                if (date) {
+                    allStatusRecords = allStatusRecords.filter(record => {
+                        const recordDate = new Date(record.collected_at || record.CollectedAt).toISOString().split('T')[0];
+                        return recordDate === date;
+                    });
+                }
+
+                // 按时间倒序排序
+                allStatusRecords.sort((a, b) => new Date(b.record_time || b.RecordTime) - new Date(a.record_time || a.RecordTime));
+
+                if (allStatusRecords.length > 0) {
+                    let html = '';
+                    allStatusRecords.forEach(record => {
+                        const recordStatus = record.run_status || record.RunStatus || record.status || record.Status;
+                        const recordTime = new Date(record.collected_at || record.CollectedAt).toLocaleString();
+                        const statusClass = getDeviceStatusClass(recordStatus);
+
+                        html += `
+                            <div class="status-card">
+                                <div class="status-indicator ${statusClass}"></div>
+                                <div class="status-info">
+                                    <strong>设备${record.device_id} (${record.device_name} - ${record.device_type})</strong>
+                                    <div class="status-text">${getDeviceStatusText(recordStatus)}</div>
+                                    <div class="status-time">记录时间: ${recordTime}</div>
+                                    ${record.notes ? `<div class="status-notes">备注: ${record.notes}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="empty-state"><p>暂无设备状态记录</p></div>';
+                }
+
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-error">加载设备状态记录失败: ${error.message}</div>`;
+            }
+        }
+
+        // 加载设备维护记录
+        async function loadDeviceMaintenance() {
+            const content = document.getElementById('maintenance-content');
+            const deviceId = document.getElementById('maintenance-search-device-id').value;
+            const maintenanceType = document.getElementById('maintenance-search-type').value;
+            const date = document.getElementById('maintenance-search-date').value;
+
+            content.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                // 获取所有设备，然后获取每个设备的维护记录
+                const devicesResult = await apiRequest('GET', '/api/devices');
+                const devices = devicesResult.data || [];
+
+                let allMaintenanceRecords = [];
+
+                // 获取每个设备的维护记录
+                for (const device of devices) {
+                    const deviceIdCurrent = device.ID || device.id;
+                    // 如果指定了设备ID，只获取该设备的维护记录
+                    if (deviceId && deviceId !== deviceIdCurrent.toString()) continue;
+
+                    try {
+                        const maintenanceResult = await apiRequest('GET', `/api/devices/${deviceIdCurrent}/maintenance`);
+                        const maintenanceRecords = maintenanceResult.data || [];
+                        maintenanceRecords.forEach(record => {
+                            allMaintenanceRecords.push({
+                                ...record,
+                                device_id: deviceIdCurrent,
+                                device_name: device.Name || device.name,
+                                device_type: device.Type || device.type
+                            });
+                        });
+                    } catch (error) {
+                        console.warn(`获取设备 ${deviceIdCurrent} 的维护记录失败:`, error);
+                    }
+                }
+
+                // 按维护类型筛选
+                if (maintenanceType) {
+                    allMaintenanceRecords = allMaintenanceRecords.filter(record => {
+                        const type = record.maintenance_type || record.MaintenanceType;
+                        return type === maintenanceType;
+                    });
+                }
+
+                // 按日期筛选
+                if (date) {
+                    allMaintenanceRecords = allMaintenanceRecords.filter(record => {
+                        const recordDate = new Date(record.maintenance_time || record.MaintenanceTime).toISOString().split('T')[0];
+                        return recordDate === date;
+                    });
+                }
+
+                // 按时间倒序排序
+                allMaintenanceRecords.sort((a, b) => new Date(b.maintenance_date || b.MaintenanceDate) - new Date(a.maintenance_date || a.MaintenanceDate));
+
+                if (allMaintenanceRecords.length > 0) {
+                    let html = '';
+                    allMaintenanceRecords.forEach(record => {
+                        const maintenanceType = record.maintenance_type || record.MaintenanceType;
+                        const maintenanceDate = new Date(record.maintenance_time || record.MaintenanceTime).toLocaleString();
+
+                        html += `
+                            <div class="maintenance-record">
+                                <div class="maintenance-info">
+                                    <strong>设备${record.device_id} (${record.device_name} - ${record.device_type})</strong>
+                                    <div class="maintenance-type">维护类型: ${getMaintenanceTypeText(maintenanceType)}</div>
+                                    <div class="maintenance-date">维护时间: ${maintenanceDate}</div>
+                                    <div class="maintenance-personnel">维护人员: ${record.operator_name || record.OperatorName || '未记录'}</div>
+                                    ${record.description ? `<div class="maintenance-description">描述: ${record.description}</div>` : ''}
+                                    ${record.cost ? `<div class="maintenance-cost">费用: ¥${record.cost}</div>` : ''}
+                                </div>
+                                <div class="maintenance-actions">
+                                    <button class="btn btn-sm btn-warning" onclick="openModal('maintenance-record', {device_id: ${record.device_id}, device_name: '${record.device_name}'})">记录维护</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="empty-state"><p>暂无维护记录</p></div>';
+                }
+
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-error">加载维护记录失败: ${error.message}</div>`;
+            }
+        }
+
+        // 获取设备状态对应的CSS类
+        function getDeviceStatusClass(status) {
+            switch (status) {
+                case 'NORMAL': return 'online';
+                case 'FAULT': return 'error';
+                case 'OFFLINE': return 'offline';
+                case 'ONLINE': return 'online';
+                case 'WARNING': return 'warning';
+                case 'ERROR': return 'error';
+                default: return 'offline';
+            }
+        }
+
+        // 获取设备状态的文本
+        function getDeviceStatusText(status) {
+            switch (status) {
+                case 'NORMAL': return '正常';
+                case 'FAULT': return '故障';
+                case 'OFFLINE': return '离线';
+                case 'ONLINE': return '在线';
+                case 'WARNING': return '警告';
+                case 'ERROR': return '故障';
+                default: return '未知';
+            }
+        }
+
+        // 获取维护类型的文本
+        function getMaintenanceTypeText(type) {
+            switch (type) {
+                case 'REPAIR': return '维修';
+                case 'REPLACE': return '更换';
+                case 'INSPECTION': return '检查';
+                case 'UPGRADE': return '升级';
+                case 'OTHER': return '其他';
+                default: return '未知';
+            }
+        }
+
+        // 重置设备状态搜索
+        function resetStatusSearch() {
+            document.getElementById('status-search-device-id').value = '';
+            document.getElementById('status-search-status').value = '';
+            document.getElementById('status-search-date').value = '';
+            loadDeviceStatus();
+        }
+
+        // 重置维护记录搜索
+        function resetMaintenanceSearch() {
+            document.getElementById('maintenance-search-device-id').value = '';
+            document.getElementById('maintenance-search-type').value = '';
+            document.getElementById('maintenance-search-date').value = '';
+            loadDeviceMaintenance();
+        }
+
+        // 传感器搜索功能
+        function searchSensors() {
+            const id = document.getElementById('sensors-search-id').value;
+            const type = document.getElementById('sensors-search-type').value;
+            const status = document.getElementById('sensors-search-status').value;
+            loadSensors({ id, type, status });
+        }
+
+        // 重置传感器搜索
+        function resetSensorsSearch() {
+            document.getElementById('sensors-search-id').value = '';
+            document.getElementById('sensors-search-type').value = '';
+            document.getElementById('sensors-search-status').value = '';
+            loadSensors();
+        }
+
+        // 预警搜索功能
+        function searchAlerts() {
+            const type = document.getElementById('alerts-search-type').value;
+            const severity = document.getElementById('alerts-search-severity').value;
+            const status = document.getElementById('alerts-search-status').value;
+            loadAlerts({ type, severity, status });
+        }
+
+        // 重置预警搜索
+        function resetAlertsSearch() {
+            document.getElementById('alerts-search-type').value = '';
+            document.getElementById('alerts-search-severity').value = '';
+            document.getElementById('alerts-search-status').value = '';
+            loadAlerts();
+        }
+
+        // 资源搜索功能
+        function searchResources() {
+            const type = document.getElementById('resources-search-type').value;
+            const stage = document.getElementById('resources-search-stage').value;
+            const regionId = document.getElementById('resources-search-region-id').value;
+            loadResources({ type, stage, region_id: regionId });
+        }
+
+        // 重置资源搜索
+        function resetResourcesSearch() {
+            document.getElementById('resources-search-type').value = '';
+            document.getElementById('resources-search-stage').value = '';
+            document.getElementById('resources-search-region-id').value = '';
+            loadResources();
+        }
+
+        // 设备搜索功能
+        function searchDevices() {
+            const type = document.getElementById('devices-search-type').value;
+            const regionId = document.getElementById('devices-search-region-id').value;
+            const name = document.getElementById('devices-search-name').value;
+            loadDevices({ type, region_id: regionId, name });
+        }
+
+        // 重置设备搜索
+        function resetDevicesSearch() {
+            document.getElementById('devices-search-type').value = '';
+            document.getElementById('devices-search-region-id').value = '';
+            document.getElementById('devices-search-name').value = '';
+            loadDevices();
+        }
+
+        // 报表搜索功能
+        function searchReports() {
+            const type = document.getElementById('reports-search-type').value;
+            const templateId = document.getElementById('reports-search-template-id').value;
+            const status = document.getElementById('reports-search-status').value;
+            loadReports({ type, template_id: templateId, status });
+        }
+
+        // 重置报表搜索
+        function resetReportsSearch() {
+            document.getElementById('reports-search-type').value = '';
+            document.getElementById('reports-search-template-id').value = '';
+            document.getElementById('reports-search-status').value = '';
+            loadReports();
+        }
+
+        function openModal(type, data = null) {
+            currentEditId = null;
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            
+            switch(type) {
+                case 'region':
+                    title.textContent = '新增区域';
+                    body.innerHTML = getRegionForm();
+                    break;
+                case 'sensor':
+                    title.textContent = '新增传感器';
+                    body.innerHTML = getSensorForm();
+                    break;
+                case 'alert-rule':
+                    title.textContent = '新增预警规则';
+                    body.innerHTML = getAlertRuleForm();
+                    break;
+                case 'alert':
+                    title.textContent = '新增预警';
+                    body.innerHTML = getAlertForm();
+                    break;
+                case 'resource':
+                    title.textContent = '新增资源';
+                    body.innerHTML = getResourceForm();
+                    break;
+                case 'device':
+                    title.textContent = '新增设备';
+                    body.innerHTML = getDeviceForm();
+                    break;
+                case 'device-status':
+                    title.textContent = '记录设备状态';
+                    body.innerHTML = getDeviceStatusForm();
+                    break;
+                case 'maintenance-record':
+                    if (!data || !data.device_id) {
+                        body.innerHTML = '<div class="alert alert-error">请先选择要维护的设备</div>';
+                        break;
+                    }
+                    title.textContent = '记录维护信息';
+                    body.innerHTML = getMaintenanceRecordForm(data);
+                    break;
+                case 'report-template':
+                    title.textContent = '新增报表模板';
+                    body.innerHTML = getReportTemplateForm();
+                    break;
+                case 'report':
+                    title.textContent = '新增报表';
+                    body.innerHTML = getReportForm();
+                    break;
+                case 'generate-report':
+                    title.textContent = '生成报表';
+                    body.innerHTML = getGenerateReportForm();
+                    break;
+            }
+            modal.style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            currentEditId = null;
+        }
+
+
+        // 表单生成函数
+        function getRegionForm(data = null) {
+            const name = data ? (data.Name || data.name || '') : '';
+            const type = data ? (data.Type || data.type || 'FOREST') : 'FOREST';
+            const latitude = data ? (data.Latitude !== undefined ? data.Latitude : (data.latitude !== undefined ? data.latitude : '')) : '';
+            const longitude = data ? (data.Longitude !== undefined ? data.Longitude : (data.longitude !== undefined ? data.longitude : '')) : '';
+            const managerId = data ? (data.ManagerID !== undefined ? data.ManagerID : (data.manager_id !== undefined ? data.manager_id : '')) : '';
+            
+            return `
+                <form onsubmit="saveRegion(event)">
+                    <div class="form-group">
+                        <label>区域名称 *</label>
+                        <input type="text" name="name" value="${name}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>区域类型 *</label>
+                        <select name="type" required>
+                            <option value="FOREST" ${type === 'FOREST' ? 'selected' : ''}>森林</option>
+                            <option value="GRASSLAND" ${type === 'GRASSLAND' ? 'selected' : ''}>草地</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>纬度</label>
+                        <input type="number" step="0.000001" name="latitude" value="${latitude}">
+                    </div>
+                    <div class="form-group">
+                        <label>经度</label>
+                        <input type="number" step="0.000001" name="longitude" value="${longitude}">
+                    </div>
+                    <div class="form-group">
+                        <label>负责人ID</label>
+                        <input type="number" name="manager_id" value="${managerId}">
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getSensorForm(data = null) {
+            const id = data ? (data.ID || data.id || '') : '';
+            const regionId = data ? (data.RegionID || data.region_id || '') : '';
+            const model = data ? (data.Model || data.model || '') : '';
+            const monitorType = data ? (data.MonitorType || data.monitor_type || 'TEMPERATURE') : 'TEMPERATURE';
+            const installTime = data && (data.InstallTime || data.install_time) ? 
+                new Date(data.InstallTime || data.install_time).toISOString().slice(0, 16) : '';
+            const protocol = data ? (data.Protocol || data.protocol || '') : '';
+            const status = data ? (data.Status || data.status || 'ACTIVE') : 'ACTIVE';
+            
+            return `
+                <form onsubmit="saveSensor(event)">
+                    ${currentEditId ? `
+                    <div class="form-group">
+                        <label>传感器ID *</label>
+                        <input type="number" name="id" value="${id}" required readonly>
+                    </div>` : ''}
+                    <div class="form-group">
+                        <label>区域ID *</label>
+                        <input type="number" name="region_id" value="${regionId}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>型号</label>
+                        <input type="text" name="model" value="${model}">
+                    </div>
+                    <div class="form-group">
+                        <label>监测类型 *</label>
+                        <select name="monitor_type" required>
+                            <option value="TEMPERATURE" ${monitorType === 'TEMPERATURE' ? 'selected' : ''}>温度</option>
+                            <option value="HUMIDITY" ${monitorType === 'HUMIDITY' ? 'selected' : ''}>湿度</option>
+                            <option value="IMAGE" ${monitorType === 'IMAGE' ? 'selected' : ''}>图像</option>
+                            <option value="OTHER" ${monitorType === 'OTHER' ? 'selected' : ''}>其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>安装时间</label>
+                        <input type="datetime-local" name="install_time" value="${installTime}">
+                    </div>
+                    <div class="form-group">
+                        <label>协议</label>
+                        <input type="text" name="protocol" value="${protocol}">
+                    </div>
+                    <div class="form-group">
+                        <label>状态 *</label>
+                        <select name="status" required>
+                            <option value="ACTIVE" ${status === 'ACTIVE' ? 'selected' : ''}>激活</option>
+                            <option value="INACTIVE" ${status === 'INACTIVE' ? 'selected' : ''}>未激活</option>
+                        </select>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getAlertRuleForm() {
+            return `
+                <form onsubmit="saveAlertRule(event)">
+                    <div class="form-group">
+                        <label>预警类型 *</label>
+                        <select name="alert_type" required>
+                            <option value="FIRE">火灾</option>
+                            <option value="DROUGHT">干旱</option>
+                            <option value="PEST">虫害</option>
+                            <option value="OTHER">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>条件表达式 *</label>
+                        <input type="text" name="condition_expr" placeholder="如: temp>=38 AND humidity<=20" required>
+                    </div>
+                    <div class="form-group">
+                        <label>严重程度 *</label>
+                        <select name="severity_level" required>
+                            <option value="GENERAL">一般</option>
+                            <option value="MODERATE">中等</option>
+                            <option value="SEVERE">严重</option>
+                            <option value="CRITICAL">紧急</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>是否激活</label>
+                        <select name="is_active">
+                            <option value="true">是</option>
+                            <option value="false">否</option>
+                        </select>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getAlertForm() {
+            return `
+                <form onsubmit="saveAlert(event)">
+                    <div class="form-group">
+                        <label>规则ID *</label>
+                        <input type="number" name="rule_id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>区域ID *</label>
+                        <input type="number" name="region_id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>内容</label>
+                        <textarea name="content" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>状态 *</label>
+                        <select name="status" required>
+                            <option value="PENDING">待处理</option>
+                            <option value="PROCESSING">处理中</option>
+                            <option value="CLOSED">已关闭</option>
+                        </select>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getResourceForm(data = null) {
+            const resourceType = data ? (data.ResourceType || data.resource_type || 'TREE') : 'TREE';
+            const regionId = data ? (data.RegionID || data.region_id || '') : '';
+            const speciesName = data ? (data.SpeciesName || data.species_name || '') : '';
+            const quantity = data ? (data.Quantity !== undefined ? data.Quantity : (data.quantity !== undefined ? data.quantity : '')) : '';
+            const area = data ? (data.Area !== undefined ? data.Area : (data.area !== undefined ? data.area : '')) : '';
+            const growthStage = data ? (data.GrowthStage || data.growth_stage || 'SEEDLING') : 'SEEDLING';
+            const plantedAt = data && (data.PlantedAt || data.planted_at) ? 
+                new Date(data.PlantedAt || data.planted_at).toISOString().split('T')[0] : '';
+            
+            return `
+                <form onsubmit="saveResource(event)">
+                    <div class="form-group">
+                        <label>资源类型 *</label>
+                        <select name="resource_type" required>
+                            <option value="TREE" ${resourceType === 'TREE' ? 'selected' : ''}>树木</option>
+                            <option value="GRASS" ${resourceType === 'GRASS' ? 'selected' : ''}>草地</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>区域ID *</label>
+                        <input type="number" name="region_id" value="${regionId}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>品种名称 *</label>
+                        <input type="text" name="species_name" value="${speciesName}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>数量（树木）</label>
+                        <input type="number" name="quantity" value="${quantity}">
+                    </div>
+                    <div class="form-group">
+                        <label>面积（草地，㎡）</label>
+                        <input type="number" step="0.01" name="area" value="${area}">
+                    </div>
+                    <div class="form-group">
+                        <label>生长阶段 *</label>
+                        <select name="growth_stage" required>
+                            <option value="SEEDLING" ${growthStage === 'SEEDLING' ? 'selected' : ''}>幼苗</option>
+                            <option value="GROWING" ${growthStage === 'GROWING' ? 'selected' : ''}>成长期</option>
+                            <option value="MATURE" ${growthStage === 'MATURE' ? 'selected' : ''}>成熟期</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>种植时间</label>
+                        <input type="date" name="planted_at" value="${plantedAt}">
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getDeviceForm(data = null) {
+            const id = data ? (data.ID || data.id || '') : '';
+            const name = data ? (data.Name || data.name || '') : '';
+            const type = data ? (data.Type || data.type || 'SENSOR') : 'SENSOR';
+            const modelSpec = data ? (data.ModelSpec || data.model_spec || '') : '';
+            const purchasedAt = data && (data.PurchasedAt || data.purchased_at) ? 
+                new Date(data.PurchasedAt || data.purchased_at).toISOString().split('T')[0] : '';
+            const installRegionId = data ? (data.InstallRegionID !== undefined ? data.InstallRegionID : (data.install_region_id !== undefined ? data.install_region_id : '')) : '';
+            const installerId = data ? (data.InstallerID !== undefined ? data.InstallerID : (data.installer_id !== undefined ? data.installer_id : '')) : '';
+            const warrantyUntil = data && (data.WarrantyUntil || data.warranty_until) ? 
+                new Date(data.WarrantyUntil || data.warranty_until).toISOString().split('T')[0] : '';
+            
+            return `
+                <form onsubmit="saveDevice(event)">
+                    ${currentEditId ? `
+                    <div class="form-group">
+                        <label>设备ID *</label>
+                        <input type="number" name="id" value="${id}" required readonly>
+                    </div>` : ''}
+                    <div class="form-group">
+                        <label>设备名称 *</label>
+                        <input type="text" name="name" value="${name}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>设备类型 *</label>
+                        <select name="type" required>
+                            <option value="SENSOR" ${type === 'SENSOR' ? 'selected' : ''}>传感器</option>
+                            <option value="CAMERA" ${type === 'CAMERA' ? 'selected' : ''}>摄像头</option>
+                            <option value="ALERTER" ${type === 'ALERTER' ? 'selected' : ''}>报警器</option>
+                            <option value="OTHER" ${type === 'OTHER' ? 'selected' : ''}>其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>型号规格</label>
+                        <input type="text" name="model_spec" value="${modelSpec}">
+                    </div>
+                    <div class="form-group">
+                        <label>购买日期</label>
+                        <input type="date" name="purchased_at" value="${purchasedAt}">
+                    </div>
+                    <div class="form-group">
+                        <label>安装区域ID</label>
+                        <input type="number" name="install_region_id" value="${installRegionId}">
+                    </div>
+                    <div class="form-group">
+                        <label>安装人员ID</label>
+                        <input type="number" name="installer_id" value="${installerId}">
+                    </div>
+                    <div class="form-group">
+                        <label>保修到期日</label>
+                        <input type="date" name="warranty_until" value="${warrantyUntil}">
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getDeviceStatusForm(data = null) {
+            const deviceId = data ? (data.device_id || '') : '';
+            const runStatus = data ? (data.run_status || 'NORMAL') : 'NORMAL';
+            const batteryPercent = data ? (data.battery_percent || '') : '';
+            const signalStrength = data ? (data.signal_strength || '') : '';
+
+            return `
+                <form onsubmit="saveDeviceStatus(event)">
+                    <div class="form-group">
+                        <label>设备ID *</label>
+                        <input type="number" name="device_id" value="${deviceId}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>运行状态 *</label>
+                        <select name="run_status" required>
+                            <option value="NORMAL" ${runStatus === 'NORMAL' ? 'selected' : ''}>正常</option>
+                            <option value="FAULT" ${runStatus === 'FAULT' ? 'selected' : ''}>故障</option>
+                            <option value="OFFLINE" ${runStatus === 'OFFLINE' ? 'selected' : ''}>离线</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>电池电量 (%)</label>
+                        <input type="number" name="battery_percent" value="${batteryPercent}" min="0" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>信号强度</label>
+                        <input type="number" name="signal_strength" value="${signalStrength}" min="0" max="100">
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getMaintenanceRecordForm(data = null) {
+            const deviceId = data ? data.device_id : '';
+            const deviceName = data ? data.device_name : '';
+            const maintenanceType = data ? (data.maintenance_type || 'INSPECTION') : 'INSPECTION';
+            const content = data ? (data.content || '') : '';
+            const result = data ? (data.result || '') : '';
+
+            return `
+                <form onsubmit="saveMaintenanceRecord(event)">
+                    <div class="form-group">
+                        <label>设备信息</label>
+                        <input type="text" value="设备${deviceId} (${deviceName})" readonly style="background-color: #f8f9fa;">
+                        <input type="hidden" name="device_id" value="${deviceId}">
+                    </div>
+                    <div class="form-group">
+                        <label>维护类型 *</label>
+                        <select name="maintenance_type" required>
+                            <option value="INSPECTION" ${maintenanceType === 'INSPECTION' ? 'selected' : ''}>检查</option>
+                            <option value="REPAIR" ${maintenanceType === 'REPAIR' ? 'selected' : ''}>维修</option>
+                            <option value="REPLACE" ${maintenanceType === 'REPLACE' ? 'selected' : ''}>更换</option>
+                            <option value="UPGRADE" ${maintenanceType === 'UPGRADE' ? 'selected' : ''}>升级</option>
+                            <option value="OTHER" ${maintenanceType === 'OTHER' ? 'selected' : ''}>其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>维护内容</label>
+                        <textarea name="content" rows="3" placeholder="请描述维护的具体内容">${content}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>维护结果</label>
+                        <textarea name="result" rows="3" placeholder="请描述维护后的结果">${result}</textarea>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getReportTemplateForm() {
+            return `
+                <form onsubmit="saveReportTemplate(event)">
+                    <div class="form-group">
+                        <label>模板名称 *</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>维度 *</label>
+                        <select name="dimension" required>
+                            <option value="REGION">区域</option>
+                            <option value="TIME">时间</option>
+                            <option value="TYPE">类型</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>指标 *</label>
+                        <input type="text" name="metrics" placeholder="如: avg_temp,avg_humidity" required>
+                    </div>
+                    <div class="form-group">
+                        <label>周期 *</label>
+                        <select name="cycle" required>
+                            <option value="DAY">日</option>
+                            <option value="WEEK">周</option>
+                            <option value="MONTH">月</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>是否激活</label>
+                        <select name="is_active">
+                            <option value="true">是</option>
+                            <option value="false">否</option>
+                        </select>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getReportForm() {
+            return `
+                <form onsubmit="saveReport(event)">
+                    <div class="form-group">
+                        <label>模板ID *</label>
+                        <input type="number" name="template_id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>周期 *</label>
+                        <input type="text" name="period" placeholder="如: 2025-12" required>
+                    </div>
+                    <div class="form-group">
+                        <label>文件路径 *</label>
+                        <input type="text" name="file_path" required>
+                    </div>
+                    <div class="form-group">
+                        <label>数据源</label>
+                        <input type="text" name="data_source">
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        function getGenerateReportForm() {
+            return `
+                <form onsubmit="generateReport(event)">
+                    <div class="form-group">
+                        <label>模板ID *</label>
+                        <input type="number" name="template_id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>周期 *</label>
+                        <input type="text" name="period" placeholder="如: 2025-12" required>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                        <button type="submit" class="btn btn-warning">生成报表</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        // 保存函数
+        async function saveRegion(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                name: formData.get('name'),
+                type: formData.get('type'),
+                latitude: formData.get('latitude') ? parseFloat(formData.get('latitude')) : null,
+                longitude: formData.get('longitude') ? parseFloat(formData.get('longitude')) : null,
+                managerID: formData.get('manager_id') ? parseInt(formData.get('manager_id')) : null,
+            };
+            try {
+                if (currentEditId) {
+                    await apiRequest('PUT', `/api/regions/${currentEditId}`, data);
+                    showAlert('区域更新成功！', 'success');
+                } else {
+                    await apiRequest('POST', '/api/regions', data);
+                    showAlert('区域创建成功！', 'success');
+                }
+                closeModal();
+                currentEditId = null;
+                loadRegions();
+            } catch (error) {
+                showAlert((currentEditId ? '更新' : '创建') + '失败: ' + error.message, 'error');
+            }
+        }
+
+        async function saveSensor(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const installTime = formData.get('install_time');
+
+            if (currentEditId) {
+                // 编辑模式
+                const data = {
+                    id: currentEditId,
+                    region_id: parseInt(formData.get('region_id')),
+                    model: formData.get('model') || '',
+                    monitor_type: formData.get('monitor_type'),
+                    install_time: installTime ? new Date(installTime) : new Date(),
+                    protocol: formData.get('protocol') || '',
+                    status: formData.get('status'),
+                };
+                try {
+                    await apiRequest('PUT', `/api/sensors/${currentEditId}`, data);
+                    showAlert('传感器更新成功！', 'success');
+                } catch (error) {
+                    showAlert('更新失败: ' + error.message, 'error');
+                    return;
+                }
+            } else {
+                // 新增模式 - 不传递ID，让数据库处理
+                const data = {
+                    region_id: parseInt(formData.get('region_id')),
+                    model: formData.get('model') || '',
+                    monitor_type: formData.get('monitor_type'),
+                    install_time: installTime ? new Date(installTime) : new Date(),
+                    protocol: formData.get('protocol') || '',
+                    status: formData.get('status'),
+                };
+                try {
+                    await apiRequest('POST', '/api/sensors', data);
+                    showAlert('传感器创建成功！', 'success');
+                } catch (error) {
+                    showAlert('创建失败: ' + error.message, 'error');
+                    return;
+                }
+            }
+
+            closeModal();
+            currentEditId = null;
+            loadSensors();
+        }
+
+        async function saveAlertRule(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                alert_type: formData.get('alert_type'),
+                condition_expr: formData.get('condition_expr'),
+                severity_level: formData.get('severity_level'),
+                is_active: formData.get('is_active') !== 'false', // 默认为true
+            };
+            try {
+                await apiRequest('POST', '/api/alert-rules', data);
+                showAlert('alerts', '预警规则创建成功！', 'success');
+                closeModal();
+                loadAlerts();
+            } catch (error) {
+                showAlert('alerts', '创建失败: ' + error.message, 'error');
+            }
+        }
+
+        async function saveAlert(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                rule_id: parseInt(formData.get('rule_id')),
+                region_id: parseInt(formData.get('region_id')),
+                triggered_at: new Date(),
+                content: formData.get('content') || '',
+                status: formData.get('status'),
+            };
+            try {
+                await apiRequest('POST', '/api/alerts', data);
+                showAlert('alerts', '预警创建成功！', 'success');
+                closeModal();
+                loadAlerts();
+            } catch (error) {
+                showAlert('alerts', '创建失败: ' + error.message, 'error');
+            }
+        }
+
+        async function saveResource(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const plantedAt = formData.get('planted_at');
+            const data = {
+                resource_type: formData.get('resource_type'),
+                region_id: parseInt(formData.get('region_id')),
+                species_name: formData.get('species_name'),
+                quantity: formData.get('quantity') ? parseInt(formData.get('quantity')) : null,
+                area: formData.get('area') ? parseFloat(formData.get('area')) : null,
+                growth_stage: formData.get('growth_stage'),
+                planted_at: plantedAt ? new Date(plantedAt) : null,
+            };
+            try {
+                if (currentEditId) {
+                    await apiRequest('PUT', `/api/resources/${currentEditId}`, data);
+                    showAlert('resources', '资源更新成功！', 'success');
+                } else {
+                    await apiRequest('POST', '/api/resources', data);
+                    showAlert('resources', '资源创建成功！', 'success');
+                }
+                closeModal();
+                currentEditId = null;
+                loadResources();
+            } catch (error) {
+                showAlert('resources', (currentEditId ? '更新' : '创建') + '失败: ' + error.message, 'error');
+            }
+        }
+
+        async function saveDevice(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const purchasedAt = formData.get('purchased_at');
+            const warrantyUntil = formData.get('warranty_until');
+
+            if (currentEditId) {
+                // 编辑模式
+                const data = {
+                    id: currentEditId,
+                    name: formData.get('name'),
+                    type: formData.get('type'),
+                    model_spec: formData.get('model_spec') || null,
+                    purchased_at: purchasedAt ? new Date(purchasedAt) : null,
+                    install_region_id: formData.get('install_region_id') ? parseInt(formData.get('install_region_id')) : null,
+                    installer_id: formData.get('installer_id') ? parseInt(formData.get('installer_id')) : null,
+                    warranty_until: warrantyUntil ? new Date(warrantyUntil) : null,
+                };
+                try {
+                    await apiRequest('PUT', `/api/devices/${currentEditId}`, data);
+                    showAlert('devices', '设备更新成功！', 'success');
+                } catch (error) {
+                    showAlert('devices', '更新失败: ' + error.message, 'error');
+                    return;
+                }
+            } else {
+                // 新增模式 - 不传递ID
+                const data = {
+                    name: formData.get('name'),
+                    type: formData.get('type'),
+                    model_spec: formData.get('model_spec') || null,
+                    purchased_at: purchasedAt ? new Date(purchasedAt) : null,
+                    install_region_id: formData.get('install_region_id') ? parseInt(formData.get('install_region_id')) : null,
+                    installer_id: formData.get('installer_id') ? parseInt(formData.get('installer_id')) : null,
+                    warranty_until: warrantyUntil ? new Date(warrantyUntil) : null,
+                };
+                try {
+                    await apiRequest('POST', '/api/devices', data);
+                    showAlert('devices', '设备创建成功！', 'success');
+                } catch (error) {
+                    showAlert('devices', '创建失败: ' + error.message, 'error');
+                    return;
+                }
+            }
+
+            closeModal();
+            currentEditId = null;
+            loadDevices();
+        }
+
+        async function saveDeviceStatus(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            const data = {
+                device_id: parseInt(formData.get('device_id')),
+                run_status: formData.get('run_status'),
+                battery_percent: formData.get('battery_percent') ? parseInt(formData.get('battery_percent')) : null,
+                signal_strength: formData.get('signal_strength') ? parseInt(formData.get('signal_strength')) : null,
+            };
+
+            try {
+                await apiRequest('POST', `/api/devices/${data.device_id}/status`, data);
+                showAlert('status', '设备状态记录成功！', 'success');
+                closeModal();
+                loadDeviceStatus();
+            } catch (error) {
+                showAlert('status', '记录失败: ' + error.message, 'error');
+            }
+        }
+
+        async function saveMaintenanceRecord(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            const data = {
+                device_id: parseInt(formData.get('device_id')),
+                maintenance_type: formData.get('maintenance_type'),
+                content: formData.get('content') || null,
+                result: formData.get('result') || null,
+            };
+
+            try {
+                await apiRequest('POST', `/api/devices/${data.device_id}/maintenance`, data);
+                showAlert('maintenance', '维护记录创建成功！', 'success');
+                closeModal();
+                loadDeviceMaintenance();
+            } catch (error) {
+                showAlert('maintenance', '创建失败: ' + error.message, 'error');
+            }
+        }
+
+        async function saveReportTemplate(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                name: formData.get('name'),
+                dimension: formData.get('dimension'),
+                metrics: formData.get('metrics'),
+                cycle: formData.get('cycle'),
+                is_active: formData.get('is_active') === 'true',
+            };
+            try {
+                await apiRequest('POST', '/api/report-templates', data);
+                showAlert('reports', '报表模板创建成功！', 'success');
+                closeModal();
+                loadReports();
+            } catch (error) {
+                showAlert('reports', '创建失败: ' + error.message, 'error');
+            }
+        }
+
+        async function saveReport(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                template_id: parseInt(formData.get('template_id')),
+                period: formData.get('period'),
+                file_path: formData.get('file_path'),
+                data_source: formData.get('data_source') || null,
+            };
+            try {
+                await apiRequest('POST', '/api/reports', data);
+                showAlert('reports', '报表创建成功！', 'success');
+                closeModal();
+                loadReports();
+            } catch (error) {
+                showAlert('reports', '创建失败: ' + error.message, 'error');
+            }
+        }
+
+        async function generateReport(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                template_id: parseInt(formData.get('template_id')),
+                period: formData.get('period'),
+            };
+            try {
+                const result = await apiRequest('POST', '/api/reports/generate', data);
+                showAlert('报表生成成功！', 'success');
+                closeModal();
+                loadReports();
+            } catch (error) {
+                showAlert('生成失败: ' + error.message, 'error');
+            }
+        }
+
+        // 加载数据函数
+        async function loadSensors(searchParams = {}) {
+            const content = document.getElementById('sensors-content');
+            content.innerHTML = '<div class="loading">加载中...</div>';
+            try {
+                // 构建查询参数
+                let queryString = '';
+                const params = [];
+                if (searchParams.id && searchParams.id.trim() !== '') params.push(`sensor_id=${encodeURIComponent(searchParams.id)}`);
+                if (searchParams.type && searchParams.type !== '所有类型') params.push(`monitor_type=${encodeURIComponent(searchParams.type)}`);
+                if (searchParams.status && searchParams.status !== '所有状态') params.push(`status=${encodeURIComponent(searchParams.status)}`);
+                if (params.length > 0) queryString = '?' + params.join('&');
+                
+                const result = await apiRequest('GET', `/api/sensors${queryString}`);
+                const sensors = result.data || result;
+                if (Array.isArray(sensors) && sensors.length > 0) {
+                    let html = '<table><thead><tr><th>ID</th><th>区域ID</th><th>型号</th><th>监测类型</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+                    sensors.forEach(sensor => {
+                        const sensorId = sensor.ID || sensor.id;
+                        const monitorType = sensor.MonitorType || sensor.monitor_type;
+                        const status = sensor.Status || sensor.status;
+                        
+                        html += `<tr>
+                            <td>${sensorId}</td>
+                            <td>${sensor.RegionID || sensor.region_id}</td>
+                            <td>${sensor.Model || sensor.model || '-'}</td>
+                            <td>${monitorType}</td>
+                            <td><span style="color: ${status === 'ACTIVE' ? 'green' : 'red'}">${status}</span></td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="editSensor(${sensorId})">编辑</button>
+                                <button class="btn btn-danger" onclick="deleteSensor(${sensorId})">删除</button>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
+                }
+            } catch (error) {
+                content.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+                showAlert(`加载传感器数据失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 获取严重程度对应的颜色
+        function getSeverityColor(severity) {
+            switch (severity) {
+                case 'CRITICAL': return 'red';
+                case 'SEVERE': return 'orange';
+                case 'MODERATE': return 'yellow';
+                case 'GENERAL': return 'blue';
+                default: return 'gray';
+            }
+        }
+
+        // 获取状态对应的颜色
+        function getStatusColor(status) {
+            switch (status) {
+                case 'CLOSED': return 'green';
+                case 'PROCESSING': return 'orange';
+                case 'PENDING': return 'red';
+                default: return 'gray';
+            }
+        }
+
+        // 加载预警数据
+        async function loadAlerts(searchParams = {}) {
+            const content = document.getElementById('alerts-content');
+            content.innerHTML = '<div class="loading">加载中...</div>';
+            try {
+                // 构建查询参数
+                let rulesQueryString = '';
+                let alertsQueryString = '';
+                const rulesParams = [];
+                const alertsParams = [];
+                
+                // 构建预警规则查询参数
+                if (searchParams.type && searchParams.type !== '所有类型') rulesParams.push(`alert_type=${encodeURIComponent(searchParams.type)}`);
+                if (searchParams.severity && searchParams.severity !== '所有严重程度') rulesParams.push(`severity_level=${encodeURIComponent(searchParams.severity)}`);
+                if (rulesParams.length > 0) rulesQueryString = '?' + rulesParams.join('&');
+                
+                // 构建预警记录查询参数
+                if (searchParams.status && searchParams.status !== '所有状态') alertsParams.push(`status=${encodeURIComponent(searchParams.status)}`);
+                if (searchParams.type && searchParams.type !== '所有类型') alertsParams.push(`alert_type=${encodeURIComponent(searchParams.type)}`);
+                if (alertsParams.length > 0) alertsQueryString = '?' + alertsParams.join('&');
+                
+                const [rulesResult, alertsResult] = await Promise.all([
+                    apiRequest('GET', `/api/alert-rules${rulesQueryString}`),
+                    apiRequest('GET', `/api/alerts${alertsQueryString}`)
+                ]);
+                let html = '<h3>预警规则</h3>';
+                
+                const rules = rulesResult.data || rulesResult;
+                if (Array.isArray(rules) && rules.length > 0) {
+                    html += '<table><thead><tr><th>ID</th><th>类型</th><th>条件</th><th>严重程度</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+                    rules.forEach(rule => {
+                        const ruleId = rule.ID || rule.id;
+                        const isActive = rule.IsActive !== undefined ? rule.IsActive : rule.is_active;
+                        html += `<tr>
+                            <td>${ruleId}</td>
+                            <td>${rule.AlertType || rule.alert_type}</td>
+                            <td>${rule.ConditionExpr || rule.condition_expr}</td>
+                            <td>${rule.SeverityLevel || rule.severity_level}</td>
+                            <td><span style="color: ${isActive ? 'green' : 'red'}">${isActive ? '激活' : '未激活'}</span></td>
+                            <td>
+                                <button class="btn btn-danger" onclick="deleteAlertRule(${ruleId})">删除</button>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                } else {
+                    html += '<div class="empty-state"><p>暂无预警规则</p></div>';
+                }
+                
+                html += '<h3 style="margin-top: 30px;">预警记录</h3>';
+                const alerts = alertsResult.data || alertsResult;
+                if (Array.isArray(alerts) && alerts.length > 0) {
+                    html += '<table><thead><tr><th>ID</th><th>规则ID</th><th>区域ID</th><th>内容</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+                    alerts.forEach(alert => {
+                        const alertId = alert.ID || alert.id;
+                        const status = alert.Status || alert.status;
+                        html += `<tr>
+                            <td>${alertId}</td>
+                            <td>${alert.RuleID || alert.rule_id}</td>
+                            <td>${alert.RegionID || alert.region_id}</td>
+                            <td>${alert.Content || alert.content || '-'}</td>
+                            <td><span style="color: ${getStatusColor(status)}">${status}</span></td>
+                            <td>
+                                <button class="btn btn-danger" onclick="deleteAlert(${alertId})">删除</button>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                } else {
+                    html += '<div class="empty-state"><p>暂无预警记录</p></div>';
+                }
+                content.innerHTML = html;
+            } catch (error) {
+                content.innerHTML = '<div class="empty-state"><p>加载失败</p></div>';
+                showAlert(`加载预警数据失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadResources(searchParams = {}) {
+            const content = document.getElementById('resources-content');
+            content.innerHTML = '<div class="loading">加载中...</div>';
+            try {
+                // 构建查询参数
+                let queryString = '';
+                const params = [];
+                if (searchParams.type && searchParams.type !== '所有类型') params.push(`resource_type=${encodeURIComponent(searchParams.type)}`);
+                if (searchParams.stage && searchParams.stage !== '所有阶段') params.push(`growth_stage=${encodeURIComponent(searchParams.stage)}`);
+                if (searchParams.region_id && searchParams.region_id.trim() !== '') params.push(`region_id=${encodeURIComponent(searchParams.region_id)}`);
+                if (params.length > 0) queryString = '?' + params.join('&');
+                
+                const result = await apiRequest('GET', `/api/resources${queryString}`);
+                if (result.data && result.data.length > 0) {
+                    let html = '<table><thead><tr><th>ID</th><th>类型</th><th>区域ID</th><th>品种</th><th>数量/面积</th><th>生长阶段</th><th>操作</th></tr></thead><tbody>';
+                    result.data.forEach(resource => {
+                        const resourceId = resource.ID || resource.id;
+                        const qty = resource.quantity || resource.area || '-';
+                        html += `<tr>
+                            <td>${resourceId}</td>
+                            <td>${resource.ResourceType || resource.resource_type}</td>
+                            <td>${resource.RegionID || resource.region_id}</td>
+                            <td>${resource.SpeciesName || resource.species_name}</td>
+                            <td>${qty}</td>
+                            <td>${resource.GrowthStage || resource.growth_stage}</td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="editResource(${resourceId})">编辑</button>
+                                <button class="btn btn-danger" onclick="deleteResource(${resourceId})">删除</button>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        async function loadDevices(searchParams = {}) {
+            const content = document.getElementById('devices-content');
+            content.innerHTML = '<div class="loading">加载中...</div>';
+            try {
+                // 构建查询参数
+                let queryString = '';
+                const params = [];
+                if (searchParams.type && searchParams.type !== '所有类型') params.push(`type=${encodeURIComponent(searchParams.type)}`);
+                if (searchParams.region_id && searchParams.region_id.trim() !== '') params.push(`install_region_id=${encodeURIComponent(searchParams.region_id)}`);
+                if (searchParams.name && searchParams.name.trim() !== '') params.push(`name=${encodeURIComponent(searchParams.name)}`);
+                if (params.length > 0) queryString = '?' + params.join('&');
+                
+                const result = await apiRequest('GET', `/api/devices${queryString}`);
+                if (result.data && result.data.length > 0) {
+                    let html = '<table><thead><tr><th>ID</th><th>名称</th><th>类型</th><th>型号</th><th>安装区域</th><th>操作</th></tr></thead><tbody>';
+                    result.data.forEach(device => {
+                        const deviceId = device.ID || device.id;
+                        html += `<tr>
+                            <td>${deviceId}</td>
+                            <td>${device.Name || device.name}</td>
+                            <td>${device.Type || device.type}</td>
+                            <td>${device.ModelSpec || device.model_spec || '-'}</td>
+                            <td>${device.InstallRegionID || device.install_region_id || '-'}</td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="editDevice(${deviceId})">编辑</button>
+                                <button class="btn btn-danger" onclick="deleteDevice(${deviceId})">删除</button>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
+                }
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        async function loadReports(searchParams = {}) {
+            const content = document.getElementById('reports-content');
+            content.innerHTML = '<div class="loading">加载中...</div>';
+            try {
+                // 构建查询参数
+                let templatesQueryString = '';
+                let reportsQueryString = '';
+                const templatesParams = [];
+                const reportsParams = [];
+                
+                // 构建报表模板查询参数
+                if (searchParams.type) templatesParams.push(`cycle=${encodeURIComponent(searchParams.type)}`);
+                if (templatesParams.length > 0) templatesQueryString = '?' + templatesParams.join('&');
+                
+                // 构建生成的报表查询参数
+                if (searchParams.template_id) reportsParams.push(`template_id=${encodeURIComponent(searchParams.template_id)}`);
+                if (searchParams.type) reportsParams.push(`type=${encodeURIComponent(searchParams.type)}`);
+                if (searchParams.status) reportsParams.push(`status=${encodeURIComponent(searchParams.status)}`);
+                if (reportsParams.length > 0) reportsQueryString = '?' + reportsParams.join('&');
+                
+                const [templatesResult, reportsResult] = await Promise.all([
+                    apiRequest('GET', `/api/report-templates${templatesQueryString}`),
+                    apiRequest('GET', `/api/reports${reportsQueryString}`)
+                ]);
+                let html = '<h3>报表模板</h3>';
+                if (templatesResult.data && templatesResult.data.length > 0) {
+                    html += '<table><thead><tr><th>ID</th><th>名称</th><th>维度</th><th>周期</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+                    templatesResult.data.forEach(template => {
+                        const templateId = template.id;
+                        html += `<tr>
+                            <td>${templateId}</td>
+                            <td>${template.name}</td>
+                            <td>${template.dimension}</td>
+                            <td>${template.cycle}</td>
+                            <td>${template.is_active ? '激活' : '未激活'}</td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="viewReportTemplate(${templateId})">查看</button>
+                                <button class="btn btn-danger" onclick="deleteReportTemplate(${templateId})">删除</button>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                }
+                html += '<h3 style="margin-top: 30px;">报表列表</h3>';
+                if (reportsResult.data && reportsResult.data.length > 0) {
+                    html += '<table><thead><tr><th>ID</th><th>模板ID</th><th>周期</th><th>生成时间</th><th>操作</th></tr></thead><tbody>';
+                    reportsResult.data.forEach(report => {
+                        const reportId = report.ID || report.id || '未知';
+                        const templateId = report.template_id || report.TemplateID || '未知';
+                        const period = report.period || report.Period || '未知';
+                        const generatedAt = report.generated_at || report.GeneratedAt || '未知';
+                        html += `<tr>
+                            <td>${reportId}</td>
+                            <td>${templateId}</td>
+                            <td>${period}</td>
+                            <td>${generatedAt}</td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="viewReport(${reportId})">查看</button>
+                                <button class="btn btn-success" onclick="exportReport(${reportId}, 'excel')">导出Excel</button>
+                                <button class="btn btn-danger" onclick="deleteReport(${reportId})">删除</button>
+                            </td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                }
+                content.innerHTML = html;
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        // 报表查询函数
+        function searchReports() {
+            // 获取查询表单中的值
+            const type = document.getElementById('reports-search-type').value;
+            const templateId = document.getElementById('reports-search-template-id').value;
+            const status = document.getElementById('reports-search-status').value;
+            
+            // 构建查询参数
+            const searchParams = {};
+            
+            // 转换前端周期值为后端数据库存储的值
+            const typeMap = {
+                'daily': 'DAY',
+                'weekly': 'WEEK',
+                'monthly': 'MONTH',
+                'quarterly': 'QUARTER',
+                'yearly': 'YEAR'
+            };
+            
+            if (type) {
+                // 转换为后端对应的值，如果没有匹配的则使用原始值
+                searchParams.type = typeMap[type] || type;
+            }
+            
+            if (templateId) searchParams.template_id = templateId;
+            if (status) searchParams.status = status;
+            
+            // 调用loadReports函数加载过滤后的报表数据
+            loadReports(searchParams);
+        }
+
+        // 重置报表查询函数
+        function resetReportsSearch() {
+            // 重置查询表单中的所有字段
+            document.getElementById('reports-search-type').value = '';
+            document.getElementById('reports-search-template-id').value = '';
+            document.getElementById('reports-search-status').value = '';
+            
+            // 调用loadReports函数加载所有报表数据
+            loadReports();
+        }
+
+        async function loadStatistics() {
+            const content = document.getElementById('statistics-content');
+            content.innerHTML = '<div class="loading">加载中...</div>';
+            try {
+                const [faultsResult, alertsResult] = await Promise.all([
+                    apiRequest('GET', '/api/statistics/device-faults'),
+                    apiRequest('GET', '/api/statistics/region-alerts')
+                ]);
+                
+                // 统计卡片
+                let html = '<div class="stats-grid">';
+                html += `<div class="stat-card"><h3>设备故障统计</h3><div class="value">${faultsResult.data ? faultsResult.data.length : 0}</div></div>`;
+                html += `<div class="stat-card"><h3>区域预警统计</h3><div class="value">${alertsResult.data ? alertsResult.data.length : 0}</div></div>`;
+                html += '</div>';
+                
+                // 图表容器
+                html += '<div style="margin-top: 30px;">';
+
+                html += '</div>';
+                
+                // 设备故障详情
+                if (faultsResult.data && faultsResult.data.length > 0) {
+                    html += '<h3>设备故障详情</h3><table><thead><tr><th>区域</th><th>设备ID</th><th>设备名称</th><th>故障次数</th><th>维护次数</th></tr></thead><tbody>';
+                    faultsResult.data.forEach(fault => {
+                        html += `<tr>
+                            <td>${fault.region_name || '-'}</td>
+                            <td>${fault.device_id || '-'}</td>
+                            <td>${fault.device_name || '-'}</td>
+                            <td>${fault.fault_times || 0}</td>
+                            <td>${fault.maintenance_count || 0}</td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                }
+                
+                // 区域预警详情
+                if (alertsResult.data && alertsResult.data.length > 0) {
+                    html += '<h3 style="margin-top: 30px;">区域预警详情</h3><table><thead><tr><th>区域</th><th>传感器数量</th><th>预警次数</th><th>通知发送数量</th></tr></thead><tbody>';
+                    alertsResult.data.forEach(alert => {
+                        html += `<tr>
+                            <td>${alert.region_name || '-'}</td>
+                            <td>${alert.sensors || 0}</td>
+                            <td>${alert.alerts || 0}</td>
+                            <td>${alert.notifications_sent || 0}</td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                }
+                
+                content.innerHTML = html;
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        // 加载实时监测数据
+        async function loadMonitoringData() {
+            const content = document.getElementById('monitoring-content');
+            const regionId = document.getElementById('monitoring-region').value;
+            const metric = document.getElementById('monitoring-metric').value;
+
+            console.log('开始加载实时监测数据...');
+            console.log('Token:', token ? '存在' : '不存在');
+            console.log('Token值:', token);
+            console.log('RegionId:', regionId);
+            console.log('Metric:', metric);
+
+            if (!token) {
+                content.innerHTML = '<div class="alert alert-warning">请先登录后再查看实时监测数据</div>';
+                console.log('用户未登录，无法加载数据');
+                return;
+            }
+
+            try {
+                // 获取传感器列表
+                let sensorsQuery = '';
+                if (regionId) sensorsQuery = `?region_id=${regionId}`;
+
+                console.log('请求传感器列表:', `/api/sensors${sensorsQuery}`);
+                const sensorsResult = await apiRequest('GET', `/api/sensors${sensorsQuery}`);
+                console.log('传感器API响应:', sensorsResult);
+
+                const sensors = sensorsResult.data || [];
+
+                if (sensors.length === 0) {
+                    content.innerHTML = '<div class="alert alert-info">暂无传感器数据</div>';
+                    console.log('没有找到传感器数据');
+                    return;
+                }
+
+                console.log(`找到 ${sensors.length} 个传感器，开始获取读数...`);
+
+                // 获取最新监测数据
+                const monitoringData = {};
+                const promises = sensors.map(async (sensor) => {
+                    try {
+                        const sensorId = sensor.ID || sensor.id;
+                        console.log(`获取传感器 ${sensorId} 的读数...`);
+
+                        // 获取该传感器的最新几条读数（不同类型的数据）
+                        const readingsResult = await apiRequest('GET', `/api/sensors/${sensorId}/readings?limit=10`);
+                        console.log(`传感器 ${sensorId} 读数响应:`, readingsResult);
+
+                        const readings = readingsResult.data || [];
+
+                        if (readings.length > 0) {
+                            const sensorData = {};
+                            let latestTime = null;
+
+                            console.log(`传感器 ${sensorId} 有 ${readings.length} 条读数`);
+
+                            // 处理所有读数，按类型分组取最新值
+                            readings.forEach(reading => {
+                                const readingTime = new Date(reading.collected_at || reading.created_at);
+                                if (!latestTime || readingTime > latestTime) {
+                                    latestTime = readingTime;
+                                }
+
+                                // 根据读数类型存储数据
+                                const readingType = reading.reading_type || reading.ReadingType;
+                                const value = reading.numeric_value || reading.NumericValue || reading.Numeric;
+
+                                console.log(`读数类型: ${readingType}, 值: ${value}`);
+
+                                if (value !== null && value !== undefined) {
+                                    switch(readingType) {
+                                        case 'TEMPERATURE':
+                                            sensorData.temperature = value;
+                                            break;
+                                        case 'HUMIDITY':
+                                            sensorData.humidity = value;
+                                            break;
+                                    }
+                                }
+                            });
+
+                            monitoringData[sensorId] = {
+                                sensor: sensor,
+                                data: sensorData,
+                                lastUpdate: latestTime
+                            };
+
+                            console.log(`传感器 ${sensorId} 处理结果:`, sensorData);
+                        } else {
+                            console.log(`传感器 ${sensorId} 没有读数数据`);
+                        }
+                    } catch (error) {
+                        console.warn(`获取传感器 ${sensor.ID || sensor.id} 数据失败:`, error);
+                    }
+                });
+
+                await Promise.all(promises);
+
+                console.log('所有传感器数据获取完成:', monitoringData);
+
+                // 更新界面
+                updateMonitoringDisplay(monitoringData, metric);
+
+            } catch (error) {
+                console.error('加载实时监测数据失败:', error);
+                showAlert('monitoring', '加载实时监测数据失败: ' + error.message, 'error');
+            }
+        }
+
+        // 更新实时监测显示
+        function updateMonitoringDisplay(monitoringData, filterMetric) {
+            console.log('开始更新显示界面，筛选指标:', filterMetric);
+            console.log('监控数据:', monitoringData);
+
+            const cards = document.querySelectorAll('.monitoring-card');
+
+            // 计算各指标的最新值
+            const latestData = {
+                temperature: { value: '--', time: '--', unit: '°C' },
+                humidity: { value: '--', time: '--', unit: '%' }
+            };
+
+            let latestTime = null;
+            Object.values(monitoringData).forEach(item => {
+                console.log('处理传感器数据:', item);
+                if (item.data && item.lastUpdate) {
+                    if (!latestTime || item.lastUpdate > latestTime) {
+                        latestTime = item.lastUpdate;
+                    }
+
+                    // 更新各指标数据，只在有数据时才更新
+                    if (item.data.temperature !== undefined && item.data.temperature !== null) {
+                        console.log('更新温度数据:', item.data.temperature);
+                        if (latestData.temperature.value === '--' ||
+                            item.lastUpdate > new Date(latestData.temperature.time !== '--' ? latestData.temperature.time : '2000-01-01')) {
+                            latestData.temperature = {
+                                value: item.data.temperature,
+                                time: item.lastUpdate.toLocaleString(),
+                                unit: '°C'
+                            };
+                        }
+                    }
+                    if (item.data.humidity !== undefined && item.data.humidity !== null) {
+                        console.log('更新湿度数据:', item.data.humidity);
+                        if (latestData.humidity.value === '--' ||
+                            item.lastUpdate > new Date(latestData.humidity.time !== '--' ? latestData.humidity.time : '2000-01-01')) {
+                            latestData.humidity = {
+                                value: item.data.humidity,
+                                time: item.lastUpdate.toLocaleString(),
+                                unit: '%'
+                            };
+                        }
+                    }
+                }
+            });
+
+            console.log('最终数据:', latestData);
+
+            // 更新卡片显示
+            const metrics = ['temperature', 'humidity'];
+            metrics.forEach((metric, index) => {
+                if (!filterMetric || filterMetric === '' || filterMetric === metric) {
+                    const card = cards[index];
+                    if (card) { // 检查card是否存在
+                        const valueElement = card.querySelector('.metric-value');
+                        const timeElement = card.querySelector('.metric-time');
+
+                        const data = latestData[metric];
+                        console.log(`更新卡片 ${index} (${metric}):`, data);
+                        valueElement.textContent = data.value + data.unit;
+                        timeElement.textContent = '最后更新: ' + data.time;
+                    }
+                }
+            });
+
+            // 确保只有前两个卡片可见
+            cards.forEach((card, index) => {
+                if (index < 2) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            console.log('界面更新完成');
+        }
+
+
+        // 删除函数
+        async function deleteRegion(id) {
+            if (!confirm('确定要删除这个区域吗？')) return;
+            try {
+                await apiRequest('DELETE', `/api/regions/${id}`);
+                showAlert('删除成功！', 'success');
+                loadRegions();
+            } catch (error) {
+                showAlert(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteSensor(id) {
+            if (!confirm('确定要删除这个传感器吗？')) return;
+            try {
+                await apiRequest('DELETE', `/api/sensors/${id}`);
+                showAlert('删除成功！', 'success');
+                loadSensors();
+            } catch (error) {
+                showAlert(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteAlertRule(id) {
+            if (!confirm('确定要删除这个预警规则吗？')) return;
+            try {
+                await apiRequest('DELETE', `/api/alert-rules/${id}`);
+                showAlert('删除成功！', 'success');
+                loadAlerts();
+            } catch (error) {
+                showAlert(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteAlert(id) {
+            if (!confirm('确定要删除这个预警吗？')) return;
+            try {
+                await apiRequest('DELETE', `/api/alerts/${id}`);
+                showAlert('删除成功！', 'success');
+                loadAlerts();
+            } catch (error) {
+                showAlert(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteResource(id) {
+            if (!confirm('确定要删除这个资源吗？')) return;
+            try {
+                await apiRequest('DELETE', `/api/resources/${id}`);
+                showAlert('删除成功！', 'success');
+                loadResources();
+            } catch (error) {
+                showAlert(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteDevice(id) {
+            if (!confirm('确定要删除这个设备吗？')) return;
+            try {
+                await apiRequest('DELETE', `/api/devices/${id}`);
+                showAlert('删除成功！', 'success');
+                loadDevices();
+            } catch (error) {
+                showAlert(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteReportTemplate(id) {
+            if (!confirm('确定要删除这个报表模板吗？')) return;
+            try {
+                await apiRequest('DELETE', `/api/report-templates/${id}`);
+                showAlert('删除成功！', 'success');
+                loadReports();
+            } catch (error) {
+                showAlert(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteReport(id) {
+            if (!confirm('确定要删除这个报表吗？')) return;
+            try {
+                await apiRequest('DELETE', `/api/reports/${id}`);
+                showAlert('删除成功！', 'success');
+                loadReports();
+            } catch (error) {
+                showAlert(`删除失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 查看报表模板详情
+        async function viewReportTemplate(id) {
+            try {
+                const result = await apiRequest('GET', `/api/report-templates/${id}`);
+                const template = result.data || result;
+                const modal = document.getElementById('modal');
+                const title = document.getElementById('modal-title');
+                const body = document.getElementById('modal-body');
+                
+                title.textContent = '查看报表模板';
+                body.innerHTML = `
+                    <div class="form-group">
+                        <label>模板ID</label>
+                        <input type="text" value="${template.ID || template.id}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label>名称</label>
+                        <input type="text" value="${template.Name || template.name || '-'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label>维度</label>
+                        <input type="text" value="${template.Dimension || template.dimension || '-'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label>指标</label>
+                        <textarea readonly style="background: #f5f5f5;">${template.Metrics || template.metrics || '-'}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>周期</label>
+                        <input type="text" value="${template.Cycle || template.cycle || '-'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <input type="text" value="${template.IsActive || template.is_active ? '激活' : '未激活'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label>创建时间</label>
+                        <input type="text" value="${template.CreatedAt || template.created_at || '-'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="closeModal()">关闭</button>
+                    </div>
+                `;
+                modal.style.display = 'block';
+            } catch (error) {
+                showAlert(`获取模板详情失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 查看报表详情
+        async function viewReport(id) {
+            try {
+                const result = await apiRequest('GET', `/api/reports/${id}`);
+                const report = result.data || result;
+                const modal = document.getElementById('modal');
+                const title = document.getElementById('modal-title');
+                const body = document.getElementById('modal-body');
+                
+                title.textContent = '查看报表';
+                body.innerHTML = `
+                    <div class="form-group">
+                        <label>报表ID</label>
+                        <input type="text" value="${report.ID || report.id || '-'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label>模板ID</label>
+                        <input type="text" value="${report.TemplateID || report.template_id || '-'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label>周期</label>
+                        <input type="text" value="${report.Period || report.period || '-'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label>生成时间</label>
+                        <input type="text" value="${report.GeneratedAt || report.generated_at || '-'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label>文件路径</label>
+                        <input type="text" value="${report.FilePath || report.file_path || '-'}" readonly style="background: #f5f5f5;">
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="closeModal()">关闭</button>
+                    </div>
+                `;
+                modal.style.display = 'block';
+            } catch (error) {
+                showAlert(`获取报表详情失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function exportReport(id, format) {
+            try {
+                // 使用apiRequest获取文件URL或数据，确保携带令牌
+                const response = await fetch(`${API_BASE}/api/reports/${id}/export?format=${format}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : '',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('导出失败: ' + response.statusText);
+                }
+
+                // 创建临时下载链接
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${id}_${format}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                showAlert('导出失败: ' + error.message, 'error');
+            }
+        }
+
+        // 编辑函数：先获取数据，然后打开编辑模态框
+        async function editRegion(id) {
+            try {
+                const result = await apiRequest('GET', `/api/regions/${id}`);
+                const region = result.data || result;
+                currentEditId = id;
+                openEditModal('region', region);
+            } catch (error) {
+                showAlert(`获取数据失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function editSensor(id) {
+            try {
+                const result = await apiRequest('GET', `/api/sensors/${id}`);
+                if (result.data) {
+                    const sensor = result.data;
+                    currentEditId = id;
+                    openEditModal('sensor', sensor);
+                }
+            } catch (error) {
+                showAlert('获取数据失败: ' + error.message, 'error');
+            }
+        }
+
+        async function editResource(id) {
+            try {
+                const result = await apiRequest('GET', `/api/resources/${id}`);
+                if (result.data) {
+                    const resource = result.data;
+                    currentEditId = id;
+                    openEditModal('resource', resource);
+                }
+            } catch (error) {
+                showAlert('获取数据失败: ' + error.message, 'error');
+            }
+        }
+
+        async function editDevice(id) {
+            try {
+                const result = await apiRequest('GET', `/api/devices/${id}`);
+                if (result.data) {
+                    const device = result.data;
+                    currentEditId = id;
+                    openEditModal('device', device);
+                }
+            } catch (error) {
+                showAlert('获取数据失败: ' + error.message, 'error');
+            }
+        }
+
+        // 打开编辑模态框并填充数据
+        function openEditModal(type, data) {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modal-title');
+            const body = document.getElementById('modal-body');
+            
+            switch(type) {
+                case 'region':
+                    title.textContent = '编辑区域';
+                    body.innerHTML = getRegionForm(data);
+                    break;
+                case 'sensor':
+                    title.textContent = '编辑传感器';
+                    body.innerHTML = getSensorForm(data);
+                    break;
+                case 'resource':
+                    title.textContent = '编辑资源';
+                    body.innerHTML = getResourceForm(data);
+                    break;
+                case 'device':
+                    title.textContent = '编辑设备';
+                    body.innerHTML = getDeviceForm(data);
+                    break;
+            }
+            modal.style.display = 'block';
+        }
+
+        // 初始化
+        window.onload = function() {
+            loadRegions();
+        };
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        };
+    </script>
+</body>
+</html>

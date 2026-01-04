@@ -1,0 +1,13 @@
+# 数据库配置
+# 注意：实际使用时请替换为真实的数据库连接信息
+database:
+  user: root
+  password: xxxxxx
+  host: 127.0.0.1
+  port: 3306
+  name: smart_forest
+  extra_params: "charset=utf8mb4&parseTime=true&loc=Local"
+  max_open_conns: 100
+  max_idle_conns: 10
+  conn_max_lifetime: 3600s
+  conn_max_idle_time: 600s

@@ -1,0 +1,24 @@
+# 备份配置文件
+
+# 备份文件存储目录
+backup_dir: "./backups"
+
+# 备份间隔（小时）
+backup_interval: 24h
+
+# 备份保留天数
+retention_days: 7
+
+# 数据库配置
+# 注意：实际使用时请替换为真实的数据库连接信息
+db_config:
+  host: "localhost"
+  port: 3306
+  user: "root"
+  password: "xxxxxx"
+  database: "smart_forest"
+  charset: "utf8mb4"
+  max_open_conns: 10
+  max_idle_conns: 5
+  conn_max_lifetime: "1h"
+  conn_max_idle_time: "30m"
